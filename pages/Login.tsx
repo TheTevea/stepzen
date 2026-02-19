@@ -32,7 +32,7 @@ const Login: React.FC = () => {
       <div className="max-w-md w-full bg-white border-2 border-black rounded-xl p-8 shadow-neo animate-in fade-in slide-in-from-bottom-4 duration-500">
         <div className="text-center mb-8">
            <div className="inline-flex items-center justify-center w-12 h-12 rounded-lg mb-4 overflow-hidden">
-              <img src={logoImg} alt="Stepzen Logo" className="w-full h-full object-cover" />
+              <img src={logoImg} alt="Stepzen Logo" className="h-14 -rotate-[4deg] hover:rotate-[5deg] transition-all duration-300" />
            </div>
            <h1 className="text-3xl font-display font-bold">Welcome Back</h1>
            <p className="text-gray-600 mt-2">Login to apply for internships.</p>

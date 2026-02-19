@@ -21,8 +21,8 @@ export const Footer: React.FC = () => {
           {/* Brand */}
           <div className="space-y-4">
             <Link to="/" className="flex items-center gap-2 w-fit">
-              <img src={logoImg} alt="Stepzen Logo" className="w-8 h-8 rounded-lg object-cover border-2 border-black" />
-              <span className="font-display font-black text-xl tracking-[-0.04em] text-slate-900">StepZen</span>
+              <img src={logoImg} alt="Stepzen Logo" className="h-14 -rotate-[4deg] hover:rotate-[5deg] transition-all duration-300" />
+              {/* <span className="font-display font-black text-xl tracking-[-0.04em] text-slate-900">StepZen</span> */}
             </Link>
             <p className="text-sm font-medium text-gray-600 leading-relaxed max-w-xs">
               Helping developers find their first break. We curate the best internships so you can focus on code.
@@ -69,7 +69,7 @@ export const Footer: React.FC = () => {
             © {new Date().getFullYear()} StepZen. All rights reserved.
           </p>
           <p className="text-xs font-medium text-gray-400">
-            Built for developers
+            Version 1.0.0
           </p>
         </div>
 
