@@ -4,6 +4,7 @@ import { Code, Terminal, Coffee, CheckCircle, ExternalLink } from 'lucide-react'
 import { Button } from '../components/Button';
 import { JobCard } from '../components/JobCard';
 import { HeroSection } from '../components/home/HeroSection';
+import { TestimonialStrip } from '../components/home/TestimonialStrip';
 import { INTERNSHIPS } from '../constants';
 import bannerImg from '@/src/assets/images/banner.svg';
 
@@ -17,30 +18,7 @@ const Home: React.FC = () => {
       <HeroSection />
 
       {/* Testimonial Strip */}
-      <section className="py-12 bg-indigo-50 border-y-2 border-black">
-        <div className="max-w-7xl mx-auto px-4">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {[
-              { text: "Landed my first React role in 2 weeks!", author: "Sarah J.", role: "Frontend Dev" },
-              { text: "The filters actually make sense for devs.", author: "Mike T.", role: "Backend Intern" },
-              { text: "Love the no-nonsense application process.", author: "Elena R.", role: "Fullstack" }
-            ].map((t, i) => (
-              <div key={i} className="bg-white border-2 border-black p-4 rounded-lg shadow-neo-sm">
-                <p className="text-sm font-medium italic mb-3">"{t.text}"</p>
-                <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 rounded-full bg-gray-200 border border-black overflow-hidden flex items-center justify-center text-xs font-bold">
-                    {t.author[0]}
-                  </div>
-                  <div className="text-xs">
-                    <span className="font-bold block">{t.author}</span>
-                    <span className="text-gray-500">{t.role}</span>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
+      <TestimonialStrip />
 
       {/* Trusted By */}
       <section className="py-10 text-center">

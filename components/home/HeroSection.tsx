@@ -42,7 +42,7 @@ export const HeroSection: React.FC = () => {
       </div>
 
       {/* Desktop layout */}
-      <div className="hidden md:flex flex-row items-center gap-12">
+      <div className="hidden md:flex flex-row items-center gap-12 py-16">
         <div className="w-1/2 space-y-8 relative z-10">
           <h1 className="text-7xl font-display font-bold leading-[0.9] text-gray-900 tracking-tighter">
             INTERNSHIPS FOR <br/>
@@ -70,7 +70,7 @@ export const HeroSection: React.FC = () => {
           </div>
         </div>
         <div className="w-1/2 relative flex justify-center">
-          <img src={heroImg} alt="Hero Illustration" className="w-full h-auto" />
+          <img src={heroImg} alt="Hero Illustration" className="w-full h-auto p-16" />
         </div>
       </div>
     </section>
