@@ -9,8 +9,8 @@ export const HeroSection: React.FC = () => {
     <section className="px-6 md:px-4 pb-8 md:py-0 max-w-7xl mx-auto overflow-hidden">
       {/* Mobile layout */}
       <div className="md:hidden">
-        <div className="flex justify-start">
-          <img src={heroImg} alt="Hero Illustration" className="w-48 h-auto" />
+        <div className="flex justify-start py-4">
+          <img src={heroImg} alt="Hero Illustration" className="w-64 h-auto" />
         </div>
         <h1 className="text-5xl font-display font-bold leading-[0.9] text-gray-900 tracking-tighter mb-6">
           INTERNSHIPS<br/>FOR{' '}
