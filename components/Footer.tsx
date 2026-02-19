@@ -7,8 +7,6 @@ export const Footer: React.FC = () => {
   const resources = [
     { name: 'CV Tips', href: '#' },
     { name: 'Interview Prep', href: '#' },
-    { name: 'Portfolio Guide', href: '#' },
-    { name: 'Success Stories', href: '#' },
   ];
 
   return (
@@ -21,11 +19,11 @@ export const Footer: React.FC = () => {
           {/* Brand */}
           <div className="space-y-4">
             <Link to="/" className="flex items-center gap-2 w-fit">
-              <img src={logoImg} alt="Stepzen Logo" className="h-14 -rotate-[4deg] hover:rotate-[5deg] transition-all duration-300" />
+              <img src={logoImg} alt="Stepzen Logo" className="h-14" />
               {/* <span className="font-display font-black text-xl tracking-[-0.04em] text-slate-900">StepZen</span> */}
             </Link>
             <p className="text-sm font-medium text-gray-600 leading-relaxed max-w-xs">
-              Helping developers find their first break. We curate the best internships so you can focus on code.
+              Helping developers find their first break. We curate the best internships.
             </p>
           </div>
 

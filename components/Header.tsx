@@ -34,7 +34,7 @@ export const Header: React.FC = () => {
           {/* Logo */}
           <Link to="/" className="relative flex items-center gap-2 group  self-stretch">
         
-            <img src={logoImg} alt="Stepzen Logo" className="h-14 -rotate-[4deg] hover:rotate-[5deg] transition-all duration-300" />
+            <img src={logoImg} alt="Stepzen Logo" className="h-14" />
        
           </Link>
 

@@ -1,8 +1,9 @@
 import React, { useState, useMemo } from 'react';
-import { Filter, Search } from 'lucide-react';
+import { Filter } from 'lucide-react';
 import { INTERNSHIPS } from '../constants';
 import { JobCard } from '../components/JobCard';
 import { Button } from '../components/Button';
+import { FilterPanel } from '../components/internships/FilterPanel';
 import { FilterState } from '../types';
 
 const Internships: React.FC = () => {
@@ -70,76 +71,22 @@ const Internships: React.FC = () => {
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-12 min-h-screen">
-      <div className="flex flex-col items-center mb-10">
-        <div className="inline-block bg-primary text-white border-2 border-black px-4 py-1 rounded-full font-bold text-sm tracking-wide mb-4 shadow-neo-sm">
+      <div className="flex justify-center items-center mb-10 gap-4 mt-4">
+        
+        <h1 className="text-4xl md:text-5xl font-display font-bold text-center">Find Your Match</h1>
+        <div className="inline-block bg-primary text-white border-2 border-black px-4 py-1 rounded-sm font-bold text-xl italic tracking-wide shadow-neo-sm">
            OPPORTUNITIES
         </div>
-        <h1 className="text-4xl md:text-5xl font-display font-bold text-center">Find Your Match</h1>
       </div>
 
       {/* Filter Panel */}
-      <div className="bg-white border-2 border-black rounded-xl p-6 shadow-neo mb-12">
-         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
-            {/* Search */}
-            <div className="lg:col-span-5 relative">
-               <Search className="absolute left-3 top-3 text-gray-400" size={20} />
-               <input 
-                 type="text" 
-                 placeholder="Search by role, company, or skill..."
-                 className="w-full pl-10 pr-4 py-2 border-2 border-gray-200 rounded-lg focus:outline-none focus:border-black focus:ring-0 font-medium transition-colors"
-                 value={filters.search}
-                 onChange={(e) => handleFilterChange('search', e.target.value)}
-               />
-            </div>
-            
-            {/* Dropdowns */}
-            <select 
-              className="p-2 border-2 border-gray-200 rounded-lg focus:outline-none focus:border-black font-medium bg-white"
-              value={filters.location}
-              onChange={(e) => handleFilterChange('location', e.target.value)}
-            >
-               <option value="">All Locations</option>
-               {locations.map(l => <option key={l} value={l}>{l}</option>)}
-            </select>
-
-            <select 
-              className="p-2 border-2 border-gray-200 rounded-lg focus:outline-none focus:border-black font-medium bg-white"
-              value={filters.type}
-              onChange={(e) => handleFilterChange('type', e.target.value)}
-            >
-               <option value="">All Types</option>
-               <option value="Remote">Remote</option>
-               <option value="Hybrid">Hybrid</option>
-               <option value="Onsite">Onsite</option>
-            </select>
-
-            <select 
-              className="p-2 border-2 border-gray-200 rounded-lg focus:outline-none focus:border-black font-medium bg-white"
-              value={filters.category}
-              onChange={(e) => handleFilterChange('category', e.target.value)}
-            >
-               <option value="">All Categories</option>
-               {categories.map(c => <option key={c} value={c}>{c}</option>)}
-            </select>
-
-             <select 
-              className="p-2 border-2 border-gray-200 rounded-lg focus:outline-none focus:border-black font-medium bg-white"
-              value={filters.sort}
-              onChange={(e) => handleFilterChange('sort', e.target.value)}
-            >
-               <option value="newest">Newest First</option>
-               <option value="deadline">Deadline Soon</option>
-               <option value="alpha">Company A-Z</option>
-            </select>
-            
-            <button 
-              className="lg:col-span-1 bg-gray-100 border-2 border-gray-200 rounded-lg font-bold hover:bg-gray-200 transition-colors"
-              onClick={() => setFilters({ search: '', location: '', type: '', category: '', sort: 'newest' })}
-            >
-              Reset Filters
-            </button>
-         </div>
-      </div>
+      <FilterPanel
+        filters={filters}
+        locations={locations}
+        categories={categories}
+        onFilterChange={handleFilterChange}
+        onReset={() => setFilters({ search: '', location: '', type: '', category: '', sort: 'newest' })}
+      />
 
       {/* Grid */}
       {filteredInternships.length > 0 ? (

@@ -5,6 +5,7 @@ import { Button } from '../components/Button';
 import { JobCard } from '../components/JobCard';
 import { INTERNSHIPS } from '../constants';
 import heroImg from '@/src/assets/images/hero_image.svg';
+import bannerImg from '@/src/assets/images/banner.svg';
 
 
 const Home: React.FC = () => {
@@ -148,40 +149,28 @@ const Home: React.FC = () => {
 
       {/* CTA Section */}
       <section className="py-20 px-4">
-         <div className="max-w-4xl mx-auto bg-black text-white rounded-xl border-2 border-black p-8 md:p-16 text-center relative overflow-hidden shadow-neo">
-            {/* Decorative rotated sticker */}
-            <div className="absolute -top-3 -right-3 bg-yellow-300 text-black border-2 border-black px-4 py-1.5 rounded-lg font-bold text-sm transform rotate-6 shadow-neo-sm z-20">
-              🔔 Don't Sleep On It!
-            </div>
-
-            <div className="relative z-10">
-              <div className="inline-block bg-primary text-white border-2 border-black px-4 py-1 rounded-full font-bold text-sm tracking-wide mb-6 shadow-neo-sm">
-                STAY UPDATED
+         <div className="max-w-7xl mx-auto">
+            <div className="flex flex-col md:flex-row items-center gap-10 md:gap-16">
+              {/* Left: Text content */}
+              <div className="flex-1 text-center md:text-left">
+                {/* <div className="inline-block bg-primary text-white border-2 border-black px-4 py-1 rounded-full font-bold text-sm tracking-wide mb-6 shadow-neo-sm">
+                  STAY UPDATED
+                </div> */}
+                <h2 className="text-3xl md:text-5xl font-display font-bold mb-6 text-gray-900">Don't Miss the Next Drop</h2>
+                <p className="text-gray-600 mb-8 max-w-lg text-lg">
+                  Internships fill up fast. Join 5,000+ developers getting instant alerts on our Telegram channel.
+                </p>
+                <a href="https://telegram.org" target="_blank" rel="noreferrer">
+                  <Button size="lg">
+                    🚀 Join Telegram Channel
+                  </Button>
+                </a>
               </div>
-              <h2 className="text-3xl md:text-5xl font-display font-bold mb-6">Don't Miss the Next Drop</h2>
-              <p className="text-gray-300 mb-8 max-w-lg mx-auto">
-                Internships fill up fast. Join 5,000+ developers getting instant alerts on our Telegram channel.
-              </p>
-              <a href="https://telegram.org" target="_blank" rel="noreferrer">
-                <Button size="lg" className="bg-white text-blue-600 border-2 border-black hover:bg-primary hover:text-white hover:-translate-y-1 hover:shadow-none transition-all shadow-neo">
-                  🚀 Join Telegram Channel
-                </Button>
-              </a>
-            </div>
 
-            {/* Decorative bottom-left sticker */}
-            <div className="absolute -bottom-2 -left-2 bg-accent text-white border-2 border-black px-3 py-1 rounded-lg font-bold text-xs transform -rotate-3 shadow-neo-sm z-20">
-              5,000+ devs joined ✨
-            </div>
-
-            {/* Background pattern */}
-            <div className="absolute top-0 left-0 w-full h-full opacity-10 pointer-events-none">
-               <svg width="100%" height="100%">
-                  <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
-                    <path d="M 40 0 L 0 0 0 40" fill="none" stroke="white" strokeWidth="1"/>
-                  </pattern>
-                  <rect width="100%" height="100%" fill="url(#grid)" />
-               </svg>
+              {/* Right: Banner image */}
+              <div className="flex-1 flex justify-center md:justify-center">
+                <img src={bannerImg} alt="Stay Updated Banner" className="w-full max-w-sm md:max-w-md h-auto" />
+              </div>
             </div>
          </div>
       </section>

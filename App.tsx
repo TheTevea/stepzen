@@ -2,6 +2,7 @@ import React from 'react';
 import { HashRouter as Router, Routes, Route } from 'react-router-dom';
 import { Header } from './components/Header';
 import { Footer } from './components/Footer';
+import { ScrollToTop } from './components/ScrollToTop';
 import Home from './pages/Home';
 import Internships from './pages/Internships';
 import InternshipDetail from './pages/InternshipDetail';
@@ -29,6 +30,7 @@ const App: React.FC = () => {
             </Routes>
           </main>
           <Footer />
+          <ScrollToTop />
         </div>
       </Router>
     </AuthProvider>
