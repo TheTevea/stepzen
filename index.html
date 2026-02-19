@@ -5,10 +5,18 @@
     <link rel="icon" type="image/png" href="/src/assets/icons/website_icon.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Stepzen | Internships for Developers</title>
+
+    <!-- Prevent FOUC: hide body until CSS is loaded -->
+    <style>
+      body { opacity: 0; }
+      body.ready { opacity: 1; transition: opacity 0.15s ease-in; }
+    </style>
+
+    <!-- Font preconnect + preload for faster loading -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,700;12..96,800&family=Inter:wght@400;500;600&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,700;12..96,800&family=Inter:wght@400;500;600&display=optional"
       rel="stylesheet"
     />
     <script type="importmap">
@@ -22,10 +30,22 @@
         }
       }
     </script>
-    <link rel="stylesheet" href="/index.css" />
+
+    <!-- Main stylesheet — reveals body when loaded -->
+    <link rel="stylesheet" href="/index.css" onload="document.body.classList.add('ready')" />
   </head>
   <body>
     <div id="root"></div>
     <script type="module" src="/index.tsx"></script>
+    <!-- Fallback: reveal body if CSS onload doesn't fire (e.g. cached) -->
+    <script>
+      if (document.readyState === 'complete' || document.readyState === 'interactive') {
+        document.body.classList.add('ready');
+      } else {
+        window.addEventListener('DOMContentLoaded', function() {
+          document.body.classList.add('ready');
+        });
+      }
+    </script>
   </body>
 </html>
