@@ -13,7 +13,7 @@ const Home: React.FC = () => {
   return (
     <div className="animate-in fade-in duration-500">
       {/* Hero Section */}
-      <section className="px-6 md:px-4 py-8 md:py-16 max-w-7xl mx-auto overflow-hidden">
+      <section className="px-6 md:px-4 py-8 md:py-0 max-w-7xl mx-auto overflow-hidden">
         <div className="flex flex-col md:flex-row items-center gap-12">
           <div className="w-full md:w-1/2 space-y-8 relative z-10">
              {/* Decorative sticker */}
