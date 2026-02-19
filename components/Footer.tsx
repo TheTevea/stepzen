@@ -1,7 +1,7 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
+import Link from 'next/link';
 import { Send } from 'lucide-react';
-import logoImg from '@/src/assets/images/logo.svg';
+import Image from 'next/image';
 
 export const Footer: React.FC = () => {
   const resources = [
@@ -20,8 +20,8 @@ export const Footer: React.FC = () => {
 
           {/* Brand */}
           <div className="space-y-4">
-            <Link to="/" className="flex items-center gap-2 w-fit">
-              <img src={logoImg} alt="Stepzen Logo" className="w-8 h-8 rounded-lg object-cover border-2 border-black" />
+            <Link href="/" className="flex items-center gap-2 w-fit">
+              <Image src="/assets/images/logo.svg" alt="Stepzen Logo" width={32} height={32} className="w-8 h-8 rounded-lg object-cover border-2 border-black" />
               <span className="font-display font-black text-xl tracking-[-0.04em] text-slate-900">StepZen</span>
             </Link>
             <p className="text-sm font-medium text-gray-600 leading-relaxed max-w-xs">
