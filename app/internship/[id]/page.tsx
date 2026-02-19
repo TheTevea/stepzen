@@ -9,9 +9,12 @@ import { Badge } from '@/components/Badge';
 import { Button } from '@/components/Button';
 import { PageTemplate } from '@/components/PageTemplate';
 
+// Mark this route as dynamic
+export const dynamic = 'force-dynamic';
+
 export default function InternshipDetail() {
   const params = useParams();
-  const id = params.id as string;
+  const id = params?.id as string;
   const [showApplyForm, setShowApplyForm] = useState(false);
   const [formStatus, setFormStatus] = useState<'idle' | 'success'>('idle');
   

@@ -21,6 +21,7 @@ export const Header: React.FC = () => {
   ];
 
   const isActive = (path: string) => {
+    if (!pathname) return false;
     if (path === '/' && pathname !== '/') return false;
     return pathname.startsWith(path);
   };

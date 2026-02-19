@@ -9,6 +9,8 @@ import { useAuth } from '@/context/AuthContext';
 import { Button } from '@/components/Button';
 import { PageTemplate } from '@/components/PageTemplate';
 
+export const dynamic = 'force-dynamic';
+
 export default function Signup() {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
