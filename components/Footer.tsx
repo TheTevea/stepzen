@@ -69,7 +69,7 @@ export const Footer: React.FC = () => {
             © {new Date().getFullYear()} StepZen. All rights reserved.
           </p>
           <p className="text-xs font-medium text-gray-400">
-            Built for developers, by developers.
+            Built for developers
           </p>
         </div>
 
