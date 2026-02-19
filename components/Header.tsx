@@ -1,13 +1,16 @@
+'use client';
+
 import React, { useState } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { Menu, X, LogOut, User } from 'lucide-react';
-import logoImg from '@/src/assets/images/logo.svg';
+import Image from 'next/image';
 import { Button } from './Button';
 import { useAuth } from '../context/AuthContext';
 
 export const Header: React.FC = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const location = useLocation();
+  const pathname = usePathname();
   const { user, logout } = useAuth();
 
   const navLinks = [
@@ -18,8 +21,8 @@ export const Header: React.FC = () => {
   ];
 
   const isActive = (path: string) => {
-    if (path === '/' && location.pathname !== '/') return false;
-    return location.pathname.startsWith(path);
+    if (path === '/' && pathname !== '/') return false;
+    return pathname.startsWith(path);
   };
 
   const handleLogout = () => {
@@ -32,8 +35,8 @@ export const Header: React.FC = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16 md:h-20">
           {/* Logo */}
-          <Link to="/" className="flex items-center gap-2 group">
-            <img src={logoImg} alt="Stepzen Logo" className="w-8 h-8" />
+          <Link href="/" className="flex items-center gap-2 group">
+            <Image src="/assets/images/logo.svg" alt="Stepzen Logo" width={32} height={32} className="w-8 h-8" />
             <span className="font-display font-black text-2xl tracking-[-0.04em] text-slate-900">StepZen</span>
           </Link>
 
@@ -42,7 +45,7 @@ export const Header: React.FC = () => {
             {navLinks.map((link) => (
               <Link
                 key={link.name}
-                to={link.path}
+                href={link.path}
                 className={`font-bold text-sm uppercase tracking-wide transition-colors hover:text-primary ${
                   isActive(link.path) ? 'text-primary decoration-2 underline-offset-4 underline' : 'text-gray-900'
                 }`}
@@ -62,7 +65,7 @@ export const Header: React.FC = () => {
                  </Button>
               </div>
             ) : (
-              <Link to="/login">
+              <Link href="/login">
                 <Button variant="outline" size="sm" className="ml-4">
                   Login
                 </Button>
@@ -87,7 +90,7 @@ export const Header: React.FC = () => {
             {navLinks.map((link) => (
               <Link
                 key={link.name}
-                to={link.path}
+                href={link.path}
                 className={`text-lg font-bold ${
                   isActive(link.path) ? 'text-primary' : 'text-black'
                 }`}
@@ -109,7 +112,7 @@ export const Header: React.FC = () => {
                     </Button>
                   </div>
                 ) : (
-                  <Link to="/login" onClick={() => setIsMenuOpen(false)}>
+                  <Link href="/login" onClick={() => setIsMenuOpen(false)}>
                     <Button variant="outline" size="sm" fullWidth>
                       Login
                     </Button>

@@ -2,7 +2,7 @@ import React from 'react';
 import { Internship } from '../types';
 import { Badge } from './Badge';
 import { Button } from './Button';
-import { Link } from 'react-router-dom';
+import Link from 'next/link';
 import { MapPin, Calendar, ArrowRight } from 'lucide-react';
 
 interface JobCardProps {
@@ -56,7 +56,7 @@ export const JobCard: React.FC<JobCardProps> = ({ job }) => {
       </div>
 
       <div className="mt-auto pt-4 border-t-2 border-gray-100 flex gap-3">
-        <Link to={`/internship/${job.id}`} className="flex-1">
+        <Link href={`/internship/${job.id}`} className="flex-1">
           <Button variant="outline" size="sm" fullWidth className="group-hover:bg-black group-hover:text-white group-hover:border-black transition-colors">
             View Details
           </Button>
