@@ -1,10 +1,10 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowRight, Code, Terminal, Coffee, CheckCircle, ExternalLink } from 'lucide-react';
+import { Code, Terminal, Coffee, CheckCircle, ExternalLink } from 'lucide-react';
 import { Button } from '../components/Button';
 import { JobCard } from '../components/JobCard';
+import { HeroSection } from '../components/home/HeroSection';
 import { INTERNSHIPS } from '../constants';
-import heroImg from '@/src/assets/images/hero_image.svg';
 import bannerImg from '@/src/assets/images/banner.svg';
 
 
@@ -14,48 +14,7 @@ const Home: React.FC = () => {
   return (
     <div className="animate-in fade-in duration-500">
       {/* Hero Section */}
-      <section className="px-6 md:px-4 py-8 md:py-0 max-w-7xl mx-auto overflow-hidden">
-        <div className="flex flex-col md:flex-row items-center gap-12">
-          <div className="w-full md:w-1/2 space-y-8 relative z-10">
-             {/* Decorative sticker */}
-            
-
-            <h1 className="text-5xl md:text-7xl font-display font-bold leading-[0.9] text-gray-900 tracking-tighter">
-              INTERNSHIPS FOR <br/>
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#1DA85B] to-yellow-400 relative inline-block">
-                DEVELOPERS
-                <svg className="absolute w-full h-3 -bottom-1 left-0 text-yellow-400 z-[-1]" viewBox="0 0 100 10" preserveAspectRatio="none">
-                  <path d="M0 5 Q 50 10 100 5" stroke="currentColor" strokeWidth="8" fill="none" />
-                </svg>
-              </span>
-            </h1>
-            <p className="text-xl text-gray-600 font-medium max-w-md">
-              Skip the noise. Find high-quality tech internships, apply instantly, and kickstart your career.
-            </p>
-            <div className="flex flex-col sm:flex-row gap-4">
-              <Link to="/internships">
-                <Button size="lg" className="w-full sm:w-auto">
-                  Browse Internships <ArrowRight className="ml-2" size={20} />
-                </Button>
-              </Link>
-              <a href="https://telegram.org" target="_blank" rel="noreferrer">
-                <Button variant="outline" size="lg" className="w-full sm:w-auto">
-                  Join Telegram
-                </Button>
-              </a>
-            </div>
-          </div>
-          
-          <div className="w-full md:w-1/2 relative">
-            <img src={heroImg} alt="Hero Illustration" className="w-full h-auto" />
-            {/* Floating badge */}
-            {/* <div className="absolute -bottom-6 -left-6 bg-yellow-300 border-2 border-black px-4 py-2 rounded-lg shadow-neo-sm transform -rotate-6">
-              <span className="font-bold font-mono">100+ New Roles!</span>
-            </div> */}
-          </div>
-
-        </div>
-      </section>
+      <HeroSection />
 
       {/* Testimonial Strip */}
       <section className="py-12 bg-indigo-50 border-y-2 border-black">
