@@ -1,7 +1,25 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter", sans-serif;
+  --font-display: "Bricolage Grotesque", sans-serif;
+
+  --color-primary: #6366f1;
+  --color-secondary: #10b981;
+  --color-accent: #f43f5e;
+  --color-warning: #f59e0b;
+  --color-dark: #1e293b;
+  --color-light: #f8fafc;
+
+  --shadow-neo: 4px 4px 0px 0px rgba(0, 0, 0, 1);
+  --shadow-neo-sm: 2px 2px 0px 0px rgba(0, 0, 0, 1);
+}
 
 body {
-  background-color: #f8fafc; /* Slate 50 */
+  background-color: #f8fafc;
+}
+
+::selection {
+  background-color: #facc15;
+  color: #000;
 }

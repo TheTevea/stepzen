@@ -24,7 +24,7 @@ export const INTERNSHIPS: Internship[] = [
     skills: ['React', 'TypeScript', 'Tailwind', 'Figma'],
     duration: '6 months',
     stipend: '$3000/month',
-    telegramApplyLink: 'https://t.me/stepzen_apply_bot?start=job_1'
+    telegramApplyLink: 'https://t.me/+xYrIev4OEHk2MTY1'
   },
   {
     id: '2',
@@ -49,7 +49,7 @@ export const INTERNSHIPS: Internship[] = [
     skills: ['Node.js', 'PostgreSQL', 'Docker', 'AWS'],
     duration: '3 months',
     stipend: '$2500/month',
-    telegramApplyLink: 'https://t.me/stepzen_apply_bot?start=job_2'
+    telegramApplyLink: 'https://t.me/+xYrIev4OEHk2MTY1'
   },
   {
     id: '3',
@@ -74,7 +74,7 @@ export const INTERNSHIPS: Internship[] = [
     skills: ['Figma', 'Prototyping', 'User Research'],
     duration: '4 months',
     stipend: '$2000/month',
-    telegramApplyLink: 'https://t.me/stepzen_apply_bot?start=job_3'
+    telegramApplyLink: 'https://t.me/+xYrIev4OEHk2MTY1'
   },
   {
     id: '4',
@@ -99,7 +99,7 @@ export const INTERNSHIPS: Internship[] = [
     skills: ['MongoDB', 'Express', 'React', 'Node.js'],
     duration: '6 months',
     stipend: '£2200/month',
-    telegramApplyLink: 'https://t.me/stepzen_apply_bot?start=job_4'
+    telegramApplyLink: 'https://t.me/+xYrIev4OEHk2MTY1'
   },
   {
     id: '5',
@@ -124,7 +124,7 @@ export const INTERNSHIPS: Internship[] = [
     skills: ['React Native', 'iOS', 'Android', 'Redux'],
     duration: '4 months',
     stipend: '$2800/month',
-    telegramApplyLink: 'https://t.me/stepzen_apply_bot?start=job_5'
+    telegramApplyLink: 'https://t.me/+xYrIev4OEHk2MTY1'
   },
   {
     id: '6',
@@ -149,7 +149,7 @@ export const INTERNSHIPS: Internship[] = [
     skills: ['Python', 'SQL', 'Machine Learning', 'Pandas'],
     duration: '3 months',
     stipend: '$3500/month',
-    telegramApplyLink: 'https://t.me/stepzen_apply_bot?start=job_6'
+    telegramApplyLink: 'https://t.me/+xYrIev4OEHk2MTY1'
   },
     {
     id: '7',
@@ -174,7 +174,7 @@ export const INTERNSHIPS: Internship[] = [
     skills: ['Docker', 'Kubernetes', 'CI/CD', 'Linux'],
     duration: '6 months',
     stipend: '€2000/month',
-    telegramApplyLink: 'https://t.me/stepzen_apply_bot?start=job_7'
+    telegramApplyLink: 'https://t.me/+xYrIev4OEHk2MTY1'
   },
   {
     id: '8',
@@ -199,6 +199,6 @@ export const INTERNSHIPS: Internship[] = [
     skills: ['Vue.js', 'JavaScript', 'SASS', 'Git'],
     duration: '5 months',
     stipend: '€1800/month',
-    telegramApplyLink: 'https://t.me/stepzen_apply_bot?start=job_8'
+    telegramApplyLink: 'https://t.me/+xYrIev4OEHk2MTY1'
   },
 ];

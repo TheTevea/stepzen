@@ -18,7 +18,7 @@ export const Footer: React.FC = () => {
           {/* Brand */}
           <div className="space-y-4">
             <Link href="/" className="flex items-center gap-2 w-fit">
-              <img src="/assets/images/logo.svg" alt="Stepzen Logo" className="h-14" />
+              <img src="/assets/images/logo_stepzen.png" alt="Stepzen Logo" className="h-14" />
             </Link>
             <p className="text-sm font-medium text-gray-600 leading-relaxed max-w-xs">
               Helping developers find their first break. We curate the best internships.
@@ -47,7 +47,7 @@ export const Footer: React.FC = () => {
             <h4 className="font-black uppercase tracking-wider text-sm text-black">Community</h4>
             <p className="text-xs text-gray-500">Get daily internship alerts on Telegram.</p>
             <a
-              href="https://telegram.org"
+              href="https://t.me/+xYrIev4OEHk2MTY1"
               target="_blank"
               rel="noreferrer"
               className="inline-flex items-center gap-2 bg-[#229ED9] text-white px-4 py-2 rounded-full font-bold text-sm border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:translate-y-[1px] hover:shadow-none transition-all"

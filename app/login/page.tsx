@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Mail, Lock, ArrowRight } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
+import { useAlert } from '@/context/AlertContext';
 import { Button } from '@/components/Button';
 import { PageTemplate } from '@/components/PageTemplate';
 
@@ -15,6 +16,7 @@ export default function Login() {
   const [password, setPassword] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { login } = useAuth();
+  const { showAlert } = useAlert();
   const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -24,7 +26,8 @@ export default function Login() {
     setIsSubmitting(true);
     try {
       await login(email);
-      router.push('/');
+      showAlert('Welcome back! 👋', 'success');
+      setTimeout(() => router.push('/'), 100);
     } catch (error) {
       console.error(error);
     } finally {
@@ -37,9 +40,7 @@ export default function Login() {
       <div className="min-h-[80vh] flex items-center justify-center px-4 py-12">
         <div className="max-w-md w-full bg-white border-2 border-black rounded-xl p-8 shadow-neo animate-in fade-in slide-in-from-bottom-4 duration-500">
           <div className="text-center mb-8">
-             <div className="inline-flex items-center justify-center w-12 h-12 rounded-lg mb-4 overflow-hidden">
-                <img src="/assets/images/logo.svg" alt="Stepzen Logo" className="h-14 -rotate-[4deg] hover:rotate-[5deg] transition-all duration-300" />
-             </div>
+             <img src="/assets/images/icon_stepzen.png" alt="Stepzen Logo" className="h-20 mb-2 inline-block" />
              <h1 className="text-3xl font-display font-bold">Welcome Back</h1>
              <p className="text-gray-600 mt-2">Login to apply for internships.</p>
           </div>

@@ -3,11 +3,12 @@
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
-import { ArrowLeft, Share2, Copy, CheckCircle, Clock, DollarSign } from 'lucide-react';
+import { ArrowLeft, Share2, Copy, CheckCircle, Clock, DollarSign, Flag, X } from 'lucide-react';
 import { INTERNSHIPS } from '@/constants';
 import { Badge } from '@/components/Badge';
 import { Button } from '@/components/Button';
 import { PageTemplate } from '@/components/PageTemplate';
+import { useAlert } from '@/context/AlertContext';
 
 // Mark this route as dynamic
 export const dynamic = 'force-dynamic';
@@ -17,8 +18,21 @@ export default function InternshipDetail() {
   const id = params?.id as string;
   const [showApplyForm, setShowApplyForm] = useState(false);
   const [formStatus, setFormStatus] = useState<'idle' | 'success'>('idle');
-  
-  const job = INTERNSHIPS.find(i => i.id === id);
+  const [showReportModal, setShowReportModal] = useState(false);
+  const [reportReason, setReportReason] = useState('');
+  const [reportDetails, setReportDetails] = useState('');
+  const { showAlert } = useAlert();
+
+  // Look up job from static list or user-posted listings
+  const [job, setJob] = useState(() => INTERNSHIPS.find(i => i.id === id) || null);
+
+  useEffect(() => {
+    if (!job) {
+      const userPosts = JSON.parse(localStorage.getItem('stepzen_user_posts') || '[]');
+      const found = userPosts.find((p: { id: string }) => p.id === id);
+      if (found) setJob(found);
+    }
+  }, [id, job]);
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -48,7 +62,7 @@ export default function InternshipDetail() {
       }
     } else {
       navigator.clipboard.writeText(window.location.href);
-      alert('Link copied to clipboard!');
+      showAlert('Link copied!', 'success');
     }
   };
 
@@ -76,6 +90,35 @@ export default function InternshipDetail() {
       setShowApplyForm(false);
       setFormStatus('idle');
     }, 3000);
+  };
+
+  const REPORT_REASONS = [
+    'Scam / Fraud',
+    'Misleading information',
+    'Expired / Invalid',
+    'Inappropriate content',
+    'Other',
+  ];
+
+  const handleReport = () => {
+    if (!reportReason) {
+      showAlert('Please select a reason.', 'error');
+      return;
+    }
+    const report = {
+      jobId: job.id,
+      jobTitle: job.title,
+      company: job.company,
+      reason: reportReason,
+      details: reportDetails,
+      date: new Date().toISOString(),
+    };
+    const existing = JSON.parse(localStorage.getItem('stepzen_reports') || '[]');
+    localStorage.setItem('stepzen_reports', JSON.stringify([...existing, report]));
+    showAlert('Report submitted. Thank you!', 'success');
+    setShowReportModal(false);
+    setReportReason('');
+    setReportDetails('');
   };
 
   return (
@@ -166,11 +209,11 @@ export default function InternshipDetail() {
                    
                    <div className="grid grid-cols-2 gap-4 text-sm font-bold text-gray-600 mb-6">
                       <div className="flex flex-col items-center p-3 bg-gray-50 rounded-lg">
-                         <Clock size={20} className="mb-2 text-primary"/>
+                         <span className="text-xs uppercase tracking-wide text-gray-400 mb-1">Duration</span>
                          <span>{job.duration || 'Flexible'}</span>
                       </div>
                       <div className="flex flex-col items-center p-3 bg-gray-50 rounded-lg">
-                         <DollarSign size={20} className="mb-2 text-green-600"/>
+                         <span className="text-xs uppercase tracking-wide text-gray-400 mb-1">Stipend</span>
                          <span>{job.stipend || 'Unpaid'}</span>
                       </div>
                    </div>
@@ -189,14 +232,19 @@ export default function InternshipDetail() {
                       </Button>
                    </div>
 
-                   <div className="flex justify-center gap-4 mt-6 pt-6 border-t border-gray-100">
-                      <button onClick={() => navigator.clipboard.writeText(window.location.href)} className="text-gray-400 hover:text-black transition-colors" title="Copy Link">
-                         <Copy size={20} />
-                      </button>
-                      <button onClick={handleShare} className="text-gray-400 hover:text-black transition-colors" title="Share">
-                         <Share2 size={20} />
-                      </button>
-                   </div>
+                    <div className="flex items-center justify-center gap-4 mt-6 pt-6 border-t border-gray-100">
+                       <button onClick={() => { navigator.clipboard.writeText(window.location.href); showAlert('Link copied!', 'success'); }} className="text-gray-400 hover:text-black transition-colors" title="Copy Link">
+                          <Copy size={20} />
+                       </button>
+                       <button onClick={handleShare} className="text-gray-400 hover:text-black transition-colors" title="Share">
+                          <Share2 size={20} />
+                       </button>
+                       <span className="w-px h-5 bg-gray-200" />
+                       <button onClick={() => setShowReportModal(true)} className="inline-flex items-center gap-1.5 text-sm font-semibold text-gray-400 hover:text-red-500 transition-colors">
+                          <Flag size={16} />
+                          Report
+                       </button>
+                    </div>
                 </div>
 
                 {/* Local Form */}
@@ -235,6 +283,61 @@ export default function InternshipDetail() {
              </div>
           </div>
         </div>
+
+        {/* Report Modal */}
+        {showReportModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+            <div className="bg-white border-2 border-black rounded-xl shadow-neo w-full max-w-md p-6 animate-in zoom-in-95 duration-300">
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="font-display font-bold text-xl">Report this listing</h3>
+                <button onClick={() => { setShowReportModal(false); setReportReason(''); setReportDetails(''); }} className="text-gray-400 hover:text-black transition-colors">
+                  <X size={22} />
+                </button>
+              </div>
+
+              <p className="text-sm text-gray-500 mb-4">Help us keep internship listings safe by reporting suspicious or problematic posts.</p>
+
+              <div className="space-y-2 mb-5">
+                {REPORT_REASONS.map((reason) => (
+                  <button
+                    key={reason}
+                    onClick={() => setReportReason(reason)}
+                    className={`w-full text-left px-4 py-2.5 rounded-lg border-2 text-sm font-bold transition-all duration-150
+                      ${reportReason === reason
+                        ? 'border-black bg-primary/10 text-black shadow-sm'
+                        : 'border-gray-200 text-gray-600 hover:border-gray-400'
+                      }`}
+                  >
+                    {reason}
+                  </button>
+                ))}
+              </div>
+
+              <div className="mb-5">
+                <label className="block text-sm font-bold mb-1">Additional details (optional)</label>
+                <textarea
+                  value={reportDetails}
+                  onChange={(e) => setReportDetails(e.target.value)}
+                  rows={3}
+                  placeholder="Describe the issue..."
+                  className="w-full p-2 border-2 border-gray-200 rounded-lg focus:border-black focus:outline-none text-sm"
+                />
+              </div>
+
+              <div className="flex gap-3">
+                <Button variant="outline" fullWidth onClick={() => { setShowReportModal(false); setReportReason(''); setReportDetails(''); }}>
+                  Cancel
+                </Button>
+                <button
+                  onClick={handleReport}
+                  className="w-full px-6 py-2.5 bg-red-500 text-white font-bold rounded-full border-2 border-black shadow-neo hover:-translate-y-1 hover:shadow-none transition-all duration-200"
+                >
+                  Submit Report
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </PageTemplate>
   );
