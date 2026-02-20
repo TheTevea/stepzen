@@ -4,7 +4,6 @@ import React, { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Menu, X, LogOut, User } from 'lucide-react';
-import Image from 'next/image';
 import { Button } from './Button';
 import { useAuth } from '../context/AuthContext';
 
@@ -33,12 +32,13 @@ export const Header: React.FC = () => {
 
   return (
     <header className="sticky top-0 z-50 bg-white/90 backdrop-blur-md border-b-2 border-black">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="max-w-7xl mx-auto px-4 ">
         <div className="flex justify-between items-center h-16 md:h-20">
           {/* Logo */}
-          <Link href="/" className="flex items-center gap-2 group">
-            <Image src="/assets/images/logo.svg" alt="Stepzen Logo" width={32} height={32} className="w-8 h-8" />
-            <span className="font-display font-black text-2xl tracking-[-0.04em] text-slate-900">StepZen</span>
+          <Link href="/" className="relative flex items-center gap-2 group  self-stretch">
+        
+            <img src="/assets/images/logo.svg" alt="Stepzen Logo" className="h-14" />
+       
           </Link>
 
           {/* Desktop Nav */}

@@ -1,14 +1,11 @@
 import React from 'react';
 import Link from 'next/link';
 import { Send } from 'lucide-react';
-import Image from 'next/image';
 
 export const Footer: React.FC = () => {
   const resources = [
     { name: 'CV Tips', href: '#' },
     { name: 'Interview Prep', href: '#' },
-    { name: 'Portfolio Guide', href: '#' },
-    { name: 'Success Stories', href: '#' },
   ];
 
   return (
@@ -21,11 +18,10 @@ export const Footer: React.FC = () => {
           {/* Brand */}
           <div className="space-y-4">
             <Link href="/" className="flex items-center gap-2 w-fit">
-              <Image src="/assets/images/logo.svg" alt="Stepzen Logo" width={32} height={32} className="w-8 h-8 rounded-lg object-cover border-2 border-black" />
-              <span className="font-display font-black text-xl tracking-[-0.04em] text-slate-900">StepZen</span>
+              <img src="/assets/images/logo.svg" alt="Stepzen Logo" className="h-14" />
             </Link>
             <p className="text-sm font-medium text-gray-600 leading-relaxed max-w-xs">
-              Helping developers find their first break. We curate the best internships so you can focus on code.
+              Helping developers find their first break. We curate the best internships.
             </p>
           </div>
 
@@ -69,7 +65,7 @@ export const Footer: React.FC = () => {
             © {new Date().getFullYear()} StepZen. All rights reserved.
           </p>
           <p className="text-xs font-medium text-gray-400">
-            Built for developers, by developers.
+            Version 1.0.0
           </p>
         </div>
 
