@@ -1,12 +1,13 @@
 'use client';
 
 import React, { useState, useMemo } from 'react';
-import { Filter, Search } from 'lucide-react';
+import { Filter } from 'lucide-react';
 import { INTERNSHIPS } from '@/constants';
 import { JobCard } from '@/components/JobCard';
 import { Button } from '@/components/Button';
 import { FilterState } from '@/types';
 import { PageTemplate } from '@/components/PageTemplate';
+import { FilterPanel } from '@/components/internships/FilterPanel';
 
 export default function Internships() {
   const [filters, setFilters] = useState<FilterState>({
@@ -71,6 +72,11 @@ export default function Internships() {
     setCurrentPage(1);
   };
 
+  const handleReset = () => {
+    setFilters({ search: '', location: '', type: '', category: '', sort: 'newest' });
+    setCurrentPage(1);
+  };
+
   return (
     <PageTemplate>
       <div className="max-w-7xl mx-auto px-4 py-12 min-h-screen">
@@ -82,68 +88,13 @@ export default function Internships() {
         </div>
 
         {/* Filter Panel */}
-        <div className="bg-white border-2 border-black rounded-xl p-6 shadow-neo mb-12">
-           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
-              {/* Search */}
-              <div className="lg:col-span-5 relative">
-                 <Search className="absolute left-3 top-3 text-gray-400" size={20} />
-                 <input 
-                   type="text" 
-                   placeholder="Search by role, company, or skill..."
-                   className="w-full pl-10 pr-4 py-2 border-2 border-gray-200 rounded-lg focus:outline-none focus:border-black focus:ring-0 font-medium transition-colors"
-                   value={filters.search}
-                   onChange={(e) => handleFilterChange('search', e.target.value)}
-                 />
-              </div>
-              
-              {/* Dropdowns */}
-              <select 
-                className="p-2 border-2 border-gray-200 rounded-lg focus:outline-none focus:border-black font-medium bg-white"
-                value={filters.location}
-                onChange={(e) => handleFilterChange('location', e.target.value)}
-              >
-                 <option value="">All Locations</option>
-                 {locations.map(l => <option key={l} value={l}>{l}</option>)}
-              </select>
-
-              <select 
-                className="p-2 border-2 border-gray-200 rounded-lg focus:outline-none focus:border-black font-medium bg-white"
-                value={filters.type}
-                onChange={(e) => handleFilterChange('type', e.target.value)}
-              >
-                 <option value="">All Types</option>
-                 <option value="Remote">Remote</option>
-                 <option value="Hybrid">Hybrid</option>
-                 <option value="Onsite">Onsite</option>
-              </select>
-
-              <select 
-                className="p-2 border-2 border-gray-200 rounded-lg focus:outline-none focus:border-black font-medium bg-white"
-                value={filters.category}
-                onChange={(e) => handleFilterChange('category', e.target.value)}
-              >
-                 <option value="">All Categories</option>
-                 {categories.map(c => <option key={c} value={c}>{c}</option>)}
-              </select>
-
-               <select 
-                className="p-2 border-2 border-gray-200 rounded-lg focus:outline-none focus:border-black font-medium bg-white"
-                value={filters.sort}
-                onChange={(e) => handleFilterChange('sort', e.target.value)}
-              >
-                 <option value="newest">Newest First</option>
-                 <option value="deadline">Deadline Soon</option>
-                 <option value="alpha">Company A-Z</option>
-              </select>
-              
-              <button 
-                className="lg:col-span-1 bg-gray-100 border-2 border-gray-200 rounded-lg font-bold hover:bg-gray-200 transition-colors"
-                onClick={() => setFilters({ search: '', location: '', type: '', category: '', sort: 'newest' })}
-              >
-                Reset Filters
-              </button>
-           </div>
-        </div>
+        <FilterPanel
+          filters={filters}
+          locations={locations}
+          categories={categories}
+          onFilterChange={handleFilterChange}
+          onReset={handleReset}
+        />
 
         {/* Grid */}
         {filteredInternships.length > 0 ? (
