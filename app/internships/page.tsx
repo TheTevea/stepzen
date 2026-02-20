@@ -80,11 +80,12 @@ export default function Internships() {
   return (
     <PageTemplate>
       <div className="max-w-7xl mx-auto px-4 py-12 min-h-screen">
-        <div className="flex flex-col items-center mb-10">
-          <div className="inline-block bg-primary text-white border-2 border-black px-4 py-1 rounded-full font-bold text-sm tracking-wide mb-4 shadow-neo-sm">
+        <div className="flex justify-center items-center mb-10 gap-4 mt-4">
+        
+          <h1 className="text-4xl md:text-5xl font-display font-bold text-center">Find Your Match</h1>
+          <div className="inline-block bg-primary text-white border-2 border-black px-4 py-1 rounded-sm font-bold text-xl italic tracking-wide shadow-neo-sm">
              OPPORTUNITIES
           </div>
-          <h1 className="text-4xl md:text-5xl font-display font-bold text-center">Find Your Match</h1>
         </div>
 
         {/* Filter Panel */}
