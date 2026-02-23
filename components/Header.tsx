@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Menu, X, LogOut, User, Plus } from 'lucide-react';
+import { Menu, X, LogOut, User, Plus, LayoutDashboard } from 'lucide-react';
 import { Button } from './Button';
 import { useAuth } from '../context/AuthContext';
 import { useAlert } from '../context/AlertContext';
@@ -60,11 +60,19 @@ export const Header: React.FC = () => {
             
             {user ? (
               <div className="flex items-center gap-3 ml-4">
-                 <Link href="/post">
-                   <Button variant="secondary" size="sm" className="gap-1.5">
-                     <Plus size={16} /> Post Internship
-                   </Button>
-                 </Link>
+                 {user.role === 'ADMIN' ? (
+                   <Link href="/admin">
+                     <Button variant="secondary" size="sm" className="gap-1.5">
+                       <LayoutDashboard size={16} /> Admin Dashboard
+                     </Button>
+                   </Link>
+                 ) : (
+                   <Link href="/post">
+                     <Button variant="secondary" size="sm" className="gap-1.5">
+                       <Plus size={16} /> Post Internship
+                     </Button>
+                   </Link>
+                 )}
                  <div className="flex items-center gap-2 font-bold text-sm bg-gray-100 px-3 py-1.5 rounded-full border border-gray-200">
                     <User size={16} />
                     <span>{user.name}</span>
@@ -116,11 +124,19 @@ export const Header: React.FC = () => {
                         <User size={20} />
                         Hi, {user.name}
                      </div>
-                     <Link href="/post" onClick={() => setIsMenuOpen(false)}>
-                       <Button variant="secondary" size="sm" fullWidth className="gap-1.5">
-                         <Plus size={16} /> Post Internship
-                       </Button>
-                     </Link>
+                     {user.role === 'ADMIN' ? (
+                       <Link href="/admin" onClick={() => setIsMenuOpen(false)}>
+                         <Button variant="secondary" size="sm" fullWidth className="gap-1.5">
+                           <LayoutDashboard size={16} /> Admin Dashboard
+                         </Button>
+                       </Link>
+                     ) : (
+                       <Link href="/post" onClick={() => setIsMenuOpen(false)}>
+                         <Button variant="secondary" size="sm" fullWidth className="gap-1.5">
+                           <Plus size={16} /> Post Internship
+                         </Button>
+                       </Link>
+                     )}
                      <Button variant="outline" size="sm" fullWidth onClick={handleLogout}>
                       Logout
                     </Button>

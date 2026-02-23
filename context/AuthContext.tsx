@@ -1,16 +1,18 @@
 'use client';
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { UserRole } from '@/types';
 
 interface User {
   email: string;
   name: string;
+  role: UserRole;
 }
 
 interface AuthContextType {
   user: User | null;
-  login: (email: string) => Promise<void>;
-  signup: (email: string, name: string) => Promise<void>;
+  login: (email: string, password?: string) => Promise<void>;
+  signup: (email: string, name: string, role?: UserRole) => Promise<void>;
   logout: () => void;
   isLoading: boolean;
 }
@@ -30,16 +32,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setIsLoading(false);
   }, []);
 
-  const login = async (email: string) => {
+  const login = async (email: string, _password?: string) => {
     // Simulate API call delay
     return new Promise<void>((resolve) => {
       setTimeout(() => {
+        // Admin credentials check
+        const isAdmin = email === 'admin@stepzen.com';
+        const role: UserRole = isAdmin ? 'ADMIN' : 'SEEKER';
+
         // Simple mock: use the part before @ as the name
         const name = email.split('@')[0];
         // Capitalize first letter of name for better UX
         const formattedName = name.charAt(0).toUpperCase() + name.slice(1);
         
-        const newUser = { email, name: formattedName };
+        const newUser = { email, name: formattedName, role };
         setUser(newUser);
         localStorage.setItem('stepzen_user', JSON.stringify(newUser));
         resolve();
@@ -47,10 +53,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     });
   };
 
-  const signup = async (email: string, name: string) => {
+  const signup = async (email: string, name: string, role: UserRole = 'SEEKER') => {
     return new Promise<void>((resolve) => {
       setTimeout(() => {
-        const newUser = { email, name };
+        const newUser = { email, name, role };
         setUser(newUser);
         localStorage.setItem('stepzen_user', JSON.stringify(newUser));
         resolve();
