@@ -6,6 +6,9 @@ import Link from 'next/link';
 import { ArrowLeft, Send, Briefcase } from 'lucide-react';
 import { Button } from '@/components/Button';
 import { PageTemplate } from '@/components/PageTemplate';
+import { NeoInput } from '@/components/NeoInput';
+import { NeoTextarea } from '@/components/NeoTextarea';
+import { NeoSelect, SelectOption } from '@/components/NeoSelect';
 import { useAuth } from '@/context/AuthContext';
 import { useAlert } from '@/context/AlertContext';
 
@@ -25,8 +28,8 @@ export default function PostInternship() {
     title: '',
     company: '',
     location: '',
-    type: 'Remote' as 'Remote' | 'Hybrid' | 'Onsite',
-    category: 'Frontend' as 'Frontend' | 'Backend' | 'Fullstack' | 'Design' | 'Mobile' | 'Data',
+    type: 'Remote',
+    category: 'Frontend',
     summary: '',
     responsibilities: '',
     requirements: '',
@@ -37,8 +40,12 @@ export default function PostInternship() {
     telegramApplyLink: '',
   });
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     setForm(prev => ({ ...prev, [e.target.name]: e.target.value }));
+  };
+
+  const handleSelectChange = (name: string) => (value: string) => {
+    setForm(prev => ({ ...prev, [name]: value }));
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -83,8 +90,20 @@ export default function PostInternship() {
     );
   }
 
-  const inputClass = "w-full p-3 border-2 border-gray-200 rounded-lg focus:border-black focus:outline-none font-medium transition-colors";
-  const labelClass = "block text-sm font-bold uppercase tracking-wide text-gray-600 mb-1.5";
+  const typeOptions: SelectOption[] = [
+    { value: 'Remote', label: 'Remote' },
+    { value: 'Hybrid', label: 'Hybrid' },
+    { value: 'Onsite', label: 'Onsite' },
+  ];
+
+  const categoryOptions: SelectOption[] = [
+    { value: 'Frontend', label: 'Frontend' },
+    { value: 'Backend', label: 'Backend' },
+    { value: 'Fullstack', label: 'Fullstack' },
+    { value: 'Design', label: 'Design' },
+    { value: 'Mobile', label: 'Mobile' },
+    { value: 'Data', label: 'Data' },
+  ];
 
   return (
     <PageTemplate>
@@ -116,40 +135,50 @@ export default function PostInternship() {
             </h3>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-              <div>
-                <label className={labelClass}>Job Title *</label>
-                <input required name="title" value={form.title} onChange={handleChange} type="text" placeholder="e.g. Frontend React Engineer" className={inputClass} />
-              </div>
-              <div>
-                <label className={labelClass}>Company Name *</label>
-                <input required name="company" value={form.company} onChange={handleChange} type="text" placeholder="e.g. Acme Corp" className={inputClass} />
-              </div>
+              <NeoInput
+                label="Job Title *"
+                required
+                name="title"
+                value={form.title}
+                onChange={handleChange}
+                type="text"
+                placeholder="e.g. Frontend React Engineer"
+              />
+              <NeoInput
+                label="Company Name *"
+                required
+                name="company"
+                value={form.company}
+                onChange={handleChange}
+                type="text"
+                placeholder="e.g. Acme Corp"
+              />
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-              <div>
-                <label className={labelClass}>Location *</label>
-                <input required name="location" value={form.location} onChange={handleChange} type="text" placeholder="e.g. San Francisco, CA" className={inputClass} />
-              </div>
-              <div>
-                <label className={labelClass}>Work Type *</label>
-                <select required name="type" value={form.type} onChange={handleChange} className={inputClass}>
-                  <option value="Remote">Remote</option>
-                  <option value="Hybrid">Hybrid</option>
-                  <option value="Onsite">Onsite</option>
-                </select>
-              </div>
-              <div>
-                <label className={labelClass}>Category *</label>
-                <select required name="category" value={form.category} onChange={handleChange} className={inputClass}>
-                  <option value="Frontend">Frontend</option>
-                  <option value="Backend">Backend</option>
-                  <option value="Fullstack">Fullstack</option>
-                  <option value="Design">Design</option>
-                  <option value="Mobile">Mobile</option>
-                  <option value="Data">Data</option>
-                </select>
-              </div>
+              <NeoInput
+                label="Location *"
+                required
+                name="location"
+                value={form.location}
+                onChange={handleChange}
+                type="text"
+                placeholder="e.g. San Francisco, CA"
+              />
+              <NeoSelect
+                label="Work Type *"
+                options={typeOptions}
+                value={form.type}
+                onChange={handleSelectChange('type')}
+                placeholder="Select type"
+              />
+              <NeoSelect
+                label="Category *"
+                options={categoryOptions}
+                value={form.category}
+                onChange={handleSelectChange('category')}
+                placeholder="Select category"
+              />
             </div>
           </div>
 
@@ -162,25 +191,48 @@ export default function PostInternship() {
               <div className="w-2 h-2 bg-accent rounded-full" /> Description
             </h3>
 
-            <div>
-              <label className={labelClass}>Summary *</label>
-              <textarea required name="summary" value={form.summary} onChange={handleChange} rows={3} placeholder="Brief overview of the role..." className={inputClass} />
-            </div>
+            <NeoTextarea
+              label="Summary *"
+              required
+              name="summary"
+              value={form.summary}
+              onChange={handleChange}
+              rows={3}
+              placeholder="Brief overview of the role..."
+            />
 
-            <div>
-              <label className={labelClass}>Responsibilities * <span className="text-gray-400 normal-case font-normal">(one per line)</span></label>
-              <textarea required name="responsibilities" value={form.responsibilities} onChange={handleChange} rows={4} placeholder={"Develop responsive web applications\nCollaborate with designers\nWrite clean code"} className={inputClass} />
-            </div>
+            <NeoTextarea
+              label="Responsibilities *"
+              labelHint="(one per line)"
+              required
+              name="responsibilities"
+              value={form.responsibilities}
+              onChange={handleChange}
+              rows={4}
+              placeholder={"Develop responsive web applications\nCollaborate with designers\nWrite clean code"}
+            />
 
-            <div>
-              <label className={labelClass}>Requirements * <span className="text-gray-400 normal-case font-normal">(one per line)</span></label>
-              <textarea required name="requirements" value={form.requirements} onChange={handleChange} rows={4} placeholder={"Proficiency in JavaScript\nExperience with React\nFamiliarity with Git"} className={inputClass} />
-            </div>
+            <NeoTextarea
+              label="Requirements *"
+              labelHint="(one per line)"
+              required
+              name="requirements"
+              value={form.requirements}
+              onChange={handleChange}
+              rows={4}
+              placeholder={"Proficiency in JavaScript\nExperience with React\nFamiliarity with Git"}
+            />
 
-            <div>
-              <label className={labelClass}>Skills * <span className="text-gray-400 normal-case font-normal">(comma-separated)</span></label>
-              <input required name="skills" value={form.skills} onChange={handleChange} type="text" placeholder="React, TypeScript, Tailwind, Figma" className={inputClass} />
-            </div>
+            <NeoInput
+              label="Skills *"
+              labelHint="(comma-separated)"
+              required
+              name="skills"
+              value={form.skills}
+              onChange={handleChange}
+              type="text"
+              placeholder="React, TypeScript, Tailwind, Figma"
+            />
           </div>
 
           {/* Divider */}
@@ -193,24 +245,41 @@ export default function PostInternship() {
             </h3>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-              <div>
-                <label className={labelClass}>Duration</label>
-                <input name="duration" value={form.duration} onChange={handleChange} type="text" placeholder="e.g. 6 months" className={inputClass} />
-              </div>
-              <div>
-                <label className={labelClass}>Stipend</label>
-                <input name="stipend" value={form.stipend} onChange={handleChange} type="text" placeholder="e.g. $3000/month" className={inputClass} />
-              </div>
-              <div>
-                <label className={labelClass}>Deadline *</label>
-                <input required name="deadline" value={form.deadline} onChange={handleChange} type="date" className={inputClass} />
-              </div>
+              <NeoInput
+                label="Duration"
+                name="duration"
+                value={form.duration}
+                onChange={handleChange}
+                type="text"
+                placeholder="e.g. 6 months"
+              />
+              <NeoInput
+                label="Stipend"
+                name="stipend"
+                value={form.stipend}
+                onChange={handleChange}
+                type="text"
+                placeholder="e.g. $3000/month"
+              />
+              <NeoInput
+                label="Deadline *"
+                required
+                name="deadline"
+                value={form.deadline}
+                onChange={handleChange}
+                type="date"
+              />
             </div>
 
-            <div>
-              <label className={labelClass}>Telegram Apply Link *</label>
-              <input required name="telegramApplyLink" value={form.telegramApplyLink} onChange={handleChange} type="url" placeholder="https://t.me/..." className={inputClass} />
-            </div>
+            <NeoInput
+              label="Telegram Apply Link *"
+              required
+              name="telegramApplyLink"
+              value={form.telegramApplyLink}
+              onChange={handleChange}
+              type="url"
+              placeholder="https://t.me/..."
+            />
           </div>
 
           {/* Submit */}
