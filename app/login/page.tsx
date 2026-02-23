@@ -93,6 +93,12 @@ export default function Login() {
             <div className="text-center text-sm text-gray-500 mt-4">
               Don&apos;t have an account? <Link href="/signup" className="font-bold text-black hover:text-primary">Sign up</Link>
             </div>
+
+            <div className="mt-5 p-3 bg-gray-50 border-2 border-dashed border-gray-300 rounded-lg text-center">
+              <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Admin Demo</p>
+              <p className="text-xs text-gray-500">Email: <span className="font-mono font-bold">admin@stepzen.com</span></p>
+              <p className="text-xs text-gray-400">Use any password</p>
+            </div>
           </form>
         </div>
       </div>
