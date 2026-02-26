@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { Filter } from 'lucide-react';
 import { INTERNSHIPS } from '@/constants';
 import { JobCard } from '@/components/JobCard';
@@ -21,12 +21,22 @@ export default function Internships() {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 6;
 
+  // Merge static internships with user-posted ones from localStorage
+  const [allInternships, setAllInternships] = useState(INTERNSHIPS);
+
+  useEffect(() => {
+    const userPosts = JSON.parse(localStorage.getItem('stepzen_user_posts') || '[]');
+    if (userPosts.length > 0) {
+      setAllInternships([...userPosts, ...INTERNSHIPS]);
+    }
+  }, []);
+
   // Extract unique options for dropdowns
-  const locations = [...new Set(INTERNSHIPS.map(i => i.location.split(', ')[1] || i.location))];
-  const categories = [...new Set(INTERNSHIPS.map(i => i.category))];
+  const locations = [...new Set(allInternships.map(i => i.location.split(', ')[1] || i.location))];
+  const categories = [...new Set(allInternships.map(i => i.category))];
 
   const filteredInternships = useMemo(() => {
-    let result = [...INTERNSHIPS];
+    let result = [...allInternships];
 
     // Search
     if (filters.search) {
@@ -59,7 +69,7 @@ export default function Internships() {
     }
 
     return result;
-  }, [filters]);
+  }, [filters, allInternships]);
 
   const totalPages = Math.ceil(filteredInternships.length / itemsPerPage);
   const paginatedInternships = filteredInternships.slice(
@@ -80,11 +90,12 @@ export default function Internships() {
   return (
     <PageTemplate>
       <div className="max-w-7xl mx-auto px-4 py-12 min-h-screen">
-        <div className="flex flex-col items-center mb-10">
+        <div className="text-center mb-12">
           <div className="inline-block bg-primary text-white border-2 border-black px-4 py-1 rounded-full font-bold text-sm tracking-wide mb-4 shadow-neo-sm">
-             OPPORTUNITIES
+            OPPORTUNITIES
           </div>
-          <h1 className="text-4xl md:text-5xl font-display font-bold text-center">Find Your Match</h1>
+          <h1 className="text-3xl md:text-4xl font-display font-bold">Find Your Perfect Match</h1>
+          <p className="text-gray-500 mt-3 max-w-md mx-auto">Browse curated internships tailored for aspiring developers.</p>
         </div>
 
         {/* Filter Panel */}

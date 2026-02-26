@@ -1,9 +1,11 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import { AuthProvider } from "@/context/AuthContext";
+import { AlertProvider } from "@/context/AlertContext";
+import { Alert } from "@/components/Alert";
 
 export const metadata: Metadata = {
-  title: "Stepzen | Internships for Developers",
+  title: "StepZen | Internships for Developers",
   description: "Skip the noise. Find high-quality tech internships, apply instantly, and kickstart your career.",
 };
 
@@ -24,7 +26,10 @@ export default function RootLayout({
       </head>
       <body className="font-sans text-gray-900 antialiased">
         <AuthProvider>
-          {children}
+          <AlertProvider>
+            <Alert />
+            {children}
+          </AlertProvider>
         </AuthProvider>
       </body>
     </html>

@@ -34,7 +34,7 @@ export const HeroSection: React.FC = () => {
                 Browse Internships <ArrowRight className="ml-2" size={20} />
               </Button>
             </Link>
-            <a href="https://telegram.org" target="_blank" rel="noreferrer">
+            <a href="https://t.me/+xYrIev4OEHk2MTY1" target="_blank" rel="noreferrer">
               <Button variant="outline" size="lg" className="w-full sm:w-auto">
                 Join Telegram
               </Button>
@@ -64,7 +64,7 @@ export const HeroSection: React.FC = () => {
                 Browse Internships <ArrowRight className="ml-2" size={20} />
               </Button>
             </Link>
-            <a href="https://telegram.org" target="_blank" rel="noreferrer">
+            <a href="https://t.me/+xYrIev4OEHk2MTY1" target="_blank" rel="noreferrer">
               <Button variant="outline" size="lg">
                 Join Telegram
               </Button>

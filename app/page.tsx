@@ -97,7 +97,7 @@ export default function Home() {
                   <p className="text-gray-600 mb-8 max-w-lg text-lg">
                     Internships fill up fast. Join 5,000+ developers getting instant alerts on our Telegram channel.
                   </p>
-                  <a href="https://telegram.org" target="_blank" rel="noreferrer">
+                  <a href="https://t.me/+xYrIev4OEHk2MTY1" target="_blank" rel="noreferrer">
                     <Button size="lg">
                       🚀 Join Telegram Channel
                     </Button>

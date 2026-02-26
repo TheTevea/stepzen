@@ -3,6 +3,7 @@
 import React from 'react';
 import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
+import { ScrollToTop } from '@/components/ScrollToTop';
 
 interface PageTemplateProps {
   children: React.ReactNode;
@@ -16,6 +17,7 @@ export const PageTemplate: React.FC<PageTemplateProps> = ({ children }) => {
         {children}
       </main>
       <Footer />
+      <ScrollToTop />
     </div>
   );
 };
