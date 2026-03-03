@@ -31,3 +31,5 @@ build
 # Old React files (backup)
 *.old
 pages_old/
+
+/src/generated/prisma

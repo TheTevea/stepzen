@@ -152,9 +152,19 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   useEffect(() => {
     setUsers(loadFromStorage('sz_admin_users', DEFAULT_USERS));
     setJobs(loadFromStorage('sz_admin_jobs', DEFAULT_JOBS));
-    setCategories(loadFromStorage('sz_admin_categories', DEFAULT_CATEGORIES));
     setReports(loadFromStorage('sz_admin_reports', DEFAULT_REPORTS));
     setAuditLogs(loadFromStorage('sz_admin_audit_logs', DEFAULT_AUDIT_LOGS));
+
+    // Fetch categories from API (database), fallback to localStorage
+    fetch('/api/categories')
+      .then(res => res.ok ? res.json() : Promise.reject('API error'))
+      .then((data: Category[]) => {
+        setCategories(data);
+        saveToStorage('sz_admin_categories', data);
+      })
+      .catch(() => {
+        setCategories(loadFromStorage('sz_admin_categories', DEFAULT_CATEGORIES));
+      });
   }, []);
 
   const addLog = useCallback((log: Omit<AuditLog, 'id' | 'createdAt'>) => {

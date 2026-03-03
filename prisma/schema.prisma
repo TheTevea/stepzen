@@ -1,0 +1,149 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+}
+
+enum UserRole {
+  SEEKER
+  EMPLOYER
+  ADMIN
+}
+
+enum JobStatus {
+  DRAFT
+  PENDING_REVIEW
+  PUBLISHED
+  REJECTED
+  ARCHIVED
+}
+
+enum ReportReason {
+  SPAM
+  SCAM
+  INAPPROPRIATE
+  DUPLICATE
+  OTHER
+}
+
+enum ReportStatus {
+  OPEN
+  IN_REVIEW
+  RESOLVED
+  DISMISSED
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String?
+  role      UserRole @default(SEEKER)
+
+  isBanned  Boolean  @default(false)
+  banReason String?
+
+  jobsCreated Job[]   @relation("JobsCreatedByUser")
+  jobsReviewed Job[]  @relation("JobsReviewedByAdmin")
+  savedJobs   SavedJob[]
+  reports     JobReport[] @relation("ReportsByUser")
+  handledReports JobReport[] @relation("ReportsHandledByAdmin")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Category {
+  id       String  @id @default(cuid())
+  name     String  @unique
+  slug     String  @unique
+  isActive Boolean @default(true)
+
+  jobs Job[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Job {
+  id           String    @id @default(cuid())
+  title        String
+  description  String
+  companyName  String
+  location     String?
+  jobType      String?   // Internship, Part-time, etc.
+  telegramLink String
+
+  status       JobStatus @default(PENDING_REVIEW)
+
+  categoryId   String
+  category     Category  @relation(fields: [categoryId], references: [id])
+
+  createdById  String
+  createdBy    User      @relation("JobsCreatedByUser", fields: [createdById], references: [id])
+
+  reviewedById String?
+  reviewedBy   User?     @relation("JobsReviewedByAdmin", fields: [reviewedById], references: [id])
+  reviewNote   String?
+  publishedAt  DateTime?
+  expiresAt    DateTime?
+
+  savedBy      SavedJob[]
+  reports      JobReport[]
+
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  @@index([categoryId])
+  @@index([status])
+  @@index([createdAt])
+}
+
+model SavedJob {
+  id        String   @id @default(cuid())
+  userId    String
+  jobId     String
+
+  user      User     @relation(fields: [userId], references: [id])
+  job       Job      @relation(fields: [jobId], references: [id])
+
+  createdAt DateTime @default(now())
+
+  @@unique([userId, jobId])
+  @@index([userId])
+  @@index([jobId])
+}
+
+model JobReport {
+  id           String       @id @default(cuid())
+  jobId        String
+  job          Job          @relation(fields: [jobId], references: [id])
+
+  reportedById String?
+  reportedBy   User?        @relation("ReportsByUser", fields: [reportedById], references: [id])
+
+  reason       ReportReason
+  message      String?
+  status       ReportStatus @default(OPEN)
+
+  handledById  String?
+  handledBy    User?        @relation("ReportsHandledByAdmin", fields: [handledById], references: [id])
+  handledNote  String?
+
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([jobId])
+  @@index([status])
+}
+
+model EmailOtp {
+  id        String   @id @default(cuid())
+  email     String
+  code      String   // hashed OTP
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([email])
+}
