@@ -1,30 +1,77 @@
 'use client';
 
-import React, { useState } from 'react';
-import { Send, Mail, MapPin } from 'lucide-react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { Send, Mail, MapPin, Loader2, Clock } from 'lucide-react';
 import { Button } from '@/components/Button';
 import { PageTemplate } from '@/components/PageTemplate';
 
+const COOLDOWN_SECONDS = 20;
+
 export default function Contact() {
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [isSending, setIsSending] = useState(false);
+  const [error, setError] = useState('');
+  const [cooldown, setCooldown] = useState(0);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  // Countdown timer
+  useEffect(() => {
+    if (cooldown <= 0) return;
+    const timer = setInterval(() => {
+      setCooldown((prev) => {
+        if (prev <= 1) {
+          clearInterval(timer);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [cooldown]);
+
+  const handleSubmit = useCallback(async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isSending || cooldown > 0) return;
+
+    setError('');
+    setIsSending(true);
+
     const form = e.target as HTMLFormElement;
     const formData = new FormData(form);
-    
-    // Save to local storage mock
-    const message = {
-        name: formData.get('name'),
-        email: formData.get('email'),
-        msg: formData.get('message'),
-        date: new Date().toISOString()
-    };
-    
-    const existing = JSON.parse(localStorage.getItem('stepzen_contacts') || '[]');
-    localStorage.setItem('stepzen_contacts', JSON.stringify([...existing, message]));
 
-    setIsSubmitted(true);
+    try {
+      const res = await fetch('/api/contact', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: formData.get('name'),
+          email: formData.get('email'),
+          message: formData.get('message'),
+        }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        if (res.status === 429 && data.cooldown) {
+          setCooldown(data.cooldown);
+        }
+        setError(data.error || 'Something went wrong.');
+        return;
+      }
+
+      setIsSubmitted(true);
+      setCooldown(COOLDOWN_SECONDS);
+      form.reset();
+    } catch {
+      setError('Failed to send message. Please try again.');
+    } finally {
+      setIsSending(false);
+    }
+  }, [isSending, cooldown]);
+
+  const handleSendAnother = () => {
+    setIsSubmitted(false);
+    setError('');
   };
 
   return (
@@ -76,10 +123,23 @@ export default function Contact() {
                     </div>
                     <h3 className="text-2xl font-bold mb-2">Message Sent!</h3>
                     <p className="text-gray-600">We&apos;ll get back to you within 24 hours.</p>
-                    <Button className="mt-6" variant="outline" onClick={() => setIsSubmitted(false)}>Send Another</Button>
+                    
+                    {cooldown > 0 ? (
+                      <div className="mt-6 flex items-center justify-center gap-2 text-gray-500">
+                        <Clock size={16} className="animate-pulse" />
+                        <span className="text-sm font-medium">You can send another message in {cooldown}s</span>
+                      </div>
+                    ) : (
+                      <Button className="mt-6" variant="outline" onClick={handleSendAnother}>Send Another</Button>
+                    )}
                  </div>
               ) : (
                  <form onSubmit={handleSubmit} className="space-y-6">
+                    {error && (
+                      <div className="bg-red-50 border-2 border-red-200 text-red-700 rounded-lg p-3 text-sm font-medium">
+                        {error}
+                      </div>
+                    )}
                     <div>
                        <label className="block font-bold text-sm mb-2">Name</label>
                        <input required name="name" type="text" className="w-full p-3 border-2 border-gray-200 rounded-lg focus:outline-none focus:border-black transition-colors" placeholder="Jane Doe" />
@@ -92,7 +152,21 @@ export default function Contact() {
                        <label className="block font-bold text-sm mb-2">Message</label>
                        <textarea required name="message" rows={4} className="w-full p-3 border-2 border-gray-200 rounded-lg focus:outline-none focus:border-black transition-colors" placeholder="How can we help?"></textarea>
                     </div>
-                    <Button type="submit" fullWidth size="lg">Send Message</Button>
+                    <Button type="submit" fullWidth size="lg" disabled={isSending || cooldown > 0}>
+                      {isSending ? (
+                        <span className="flex items-center justify-center gap-2">
+                          <Loader2 size={18} className="animate-spin" />
+                          Sending...
+                        </span>
+                      ) : cooldown > 0 ? (
+                        <span className="flex items-center justify-center gap-2">
+                          <Clock size={18} />
+                          Wait {cooldown}s
+                        </span>
+                      ) : (
+                        'Send Message'
+                      )}
+                    </Button>
                  </form>
               )}
            </div>

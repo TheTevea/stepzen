@@ -50,6 +50,7 @@ model User {
   savedJobs   SavedJob[]
   reports     JobReport[] @relation("ReportsByUser")
   handledReports JobReport[] @relation("ReportsHandledByAdmin")
+  auditLogs   AuditLog[]  @relation("AuditLogsByUser")
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -75,6 +76,13 @@ model Job {
   location     String?
   jobType      String?   // Internship, Part-time, etc.
   telegramLink String
+
+  responsibilities String[]
+  requirements     String[]
+  skills           String[]
+  duration         String?
+  stipend          String?
+  deadline         String?
 
   status       JobStatus @default(PENDING_REVIEW)
 
@@ -147,4 +155,33 @@ model EmailOtp {
   createdAt DateTime @default(now())
 
   @@index([email])
+}
+
+model ContactMessage {
+  id           String    @id @default(cuid())
+  name         String
+  email        String
+  message      String
+  ipAddress    String?
+  replied      Boolean   @default(false)
+  repliedAt    DateTime?
+  replyMessage String?
+  createdAt    DateTime  @default(now())
+
+  @@index([ipAddress, createdAt])
+  @@index([createdAt])
+}
+
+model AuditLog {
+  id         String   @id @default(cuid())
+  actorId    String
+  actor      User     @relation("AuditLogsByUser", fields: [actorId], references: [id])
+  action     String
+  targetType String
+  targetId   String
+  metadata   Json?
+  createdAt  DateTime @default(now())
+
+  @@index([actorId])
+  @@index([createdAt])
 }

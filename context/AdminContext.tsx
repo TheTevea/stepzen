@@ -1,12 +1,13 @@
 'use client';
 
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import { supabase } from '@/lib/supabase';
 import {
   AdminUser,
   AdminJob,
   Category,
   JobReport,
-  AuditLog,
+  AuditLogEntry,
   JobStatus,
   ReportStatus,
   UserRole,
@@ -23,12 +24,7 @@ const DEFAULT_CATEGORIES: Category[] = [
   { id: 'cat-6', name: 'Data', slug: 'data', isActive: true, createdAt: '2024-01-01T00:00:00Z' },
 ];
 
-const DEFAULT_USERS: AdminUser[] = [
-  { id: 'u-1', email: 'admin@stepzen.com', name: 'Admin', role: 'ADMIN', isBanned: false, createdAt: '2024-01-01T00:00:00Z' },
-  { id: 'u-2', email: 'employer@acme.com', name: 'Acme Recruiter', role: 'EMPLOYER', isBanned: false, createdAt: '2024-02-10T00:00:00Z' },
-  { id: 'u-3', email: 'dev@example.com', name: 'Dev User', role: 'SEEKER', isBanned: false, createdAt: '2024-03-05T00:00:00Z' },
-  { id: 'u-4', email: 'spam@bad.com', name: 'Spammer', role: 'EMPLOYER', isBanned: true, banReason: 'Posted spam jobs', createdAt: '2024-03-20T00:00:00Z' },
-];
+
 
 const DEFAULT_JOBS: AdminJob[] = [
   {
@@ -86,21 +82,26 @@ const DEFAULT_REPORTS: JobReport[] = [
   },
 ];
 
-const DEFAULT_AUDIT_LOGS: AuditLog[] = [
-  { id: 'al-1', actorId: 'u-1', action: 'JOB_APPROVED', targetType: 'Job', targetId: 'j-1', createdAt: '2024-03-01T00:00:00Z' },
-  { id: 'al-2', actorId: 'u-1', action: 'JOB_REJECTED', targetType: 'Job', targetId: 'j-4', metadata: { reason: 'Missing valid Telegram link format.' }, createdAt: '2024-03-09T00:00:00Z' },
-  { id: 'al-3', actorId: 'u-1', action: 'JOB_ARCHIVED', targetType: 'Job', targetId: 'j-5', createdAt: '2024-02-28T00:00:00Z' },
-  { id: 'al-4', actorId: 'u-1', action: 'USER_BANNED', targetType: 'User', targetId: 'u-4', metadata: { reason: 'Posted spam jobs' }, createdAt: '2024-03-20T00:00:00Z' },
-];
+
+
 
 // ─── Context type ─────────────────────────────────────────────────────────────
 
+interface AdminUserWithJobCount extends AdminUser {
+  jobCount: number;
+}
+
 interface AdminContextType {
-  users: AdminUser[];
+  users: AdminUserWithJobCount[];
+  usersLoading: boolean;
+  usersError: string | null;
+  refreshUsers: () => Promise<void>;
   jobs: AdminJob[];
   categories: Category[];
   reports: JobReport[];
-  auditLogs: AuditLog[];
+  auditLogs: AuditLogEntry[];
+  auditLogsLoading: boolean;
+  refreshAuditLogs: () => Promise<void>;
 
   // Jobs
   approveJob: (jobId: string, actorId: string) => void;
@@ -117,9 +118,9 @@ interface AdminContextType {
   updateReportStatus: (reportId: string, status: ReportStatus, actorId: string, note?: string) => void;
 
   // Users
-  banUser: (userId: string, reason: string, actorId: string) => void;
-  unbanUser: (userId: string, actorId: string) => void;
-  updateUserRole: (userId: string, role: UserRole, actorId: string) => void;
+  banUser: (userId: string, reason: string, actorId: string) => Promise<void>;
+  unbanUser: (userId: string, actorId: string) => Promise<void>;
+  updateUserRole: (userId: string, role: UserRole, actorId: string) => Promise<void>;
 }
 
 // ─── Context ──────────────────────────────────────────────────────────────────
@@ -142,18 +143,63 @@ function saveToStorage<T>(key: string, value: T) {
   }
 }
 
+async function getAuthToken(): Promise<string | null> {
+  const { data } = await supabase.auth.getSession();
+  return data.session?.access_token ?? null;
+}
+
 export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [users, setUsers] = useState<AdminUser[]>([]);
+  const [users, setUsers] = useState<AdminUserWithJobCount[]>([]);
+  const [usersLoading, setUsersLoading] = useState(true);
+  const [usersError, setUsersError] = useState<string | null>(null);
   const [jobs, setJobs] = useState<AdminJob[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [reports, setReports] = useState<JobReport[]>([]);
-  const [auditLogs, setAuditLogs] = useState<AuditLog[]>([]);
+  const [auditLogs, setAuditLogs] = useState<AuditLogEntry[]>([]);
+  const [auditLogsLoading, setAuditLogsLoading] = useState(true);
+
+  const fetchUsers = useCallback(async () => {
+    setUsersLoading(true);
+    setUsersError(null);
+    try {
+      const token = await getAuthToken();
+      if (!token) throw new Error('Not authenticated');
+      const res = await fetch('/api/admin/users', {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!res.ok) throw new Error('Failed to fetch users');
+      const data = await res.json();
+      setUsers(data.users);
+    } catch (err) {
+      setUsersError(err instanceof Error ? err.message : 'Unknown error');
+    } finally {
+      setUsersLoading(false);
+    }
+  }, []);
+
+  const fetchAuditLogs = useCallback(async () => {
+    setAuditLogsLoading(true);
+    try {
+      const token = await getAuthToken();
+      if (!token) return;
+      const res = await fetch('/api/admin/audit-logs', {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!res.ok) throw new Error('Failed to fetch audit logs');
+      const data = await res.json();
+      setAuditLogs(data.logs);
+    } catch (err) {
+      console.error('Failed to fetch audit logs:', err);
+    } finally {
+      setAuditLogsLoading(false);
+    }
+  }, []);
 
   useEffect(() => {
-    setUsers(loadFromStorage('sz_admin_users', DEFAULT_USERS));
+    fetchUsers();
+    fetchAuditLogs();
     setJobs(loadFromStorage('sz_admin_jobs', DEFAULT_JOBS));
     setReports(loadFromStorage('sz_admin_reports', DEFAULT_REPORTS));
-    setAuditLogs(loadFromStorage('sz_admin_audit_logs', DEFAULT_AUDIT_LOGS));
 
     // Fetch categories from API (database), fallback to localStorage
     fetch('/api/categories')
@@ -165,15 +211,23 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       .catch(() => {
         setCategories(loadFromStorage('sz_admin_categories', DEFAULT_CATEGORIES));
       });
-  }, []);
+  }, [fetchUsers, fetchAuditLogs]);
 
-  const addLog = useCallback((log: Omit<AuditLog, 'id' | 'createdAt'>) => {
-    const newLog: AuditLog = { ...log, id: `al-${Date.now()}`, createdAt: new Date().toISOString() };
-    setAuditLogs(prev => {
-      const updated = [newLog, ...prev];
-      saveToStorage('sz_admin_audit_logs', updated);
-      return updated;
-    });
+  const addLog = useCallback(async (log: { action: string; targetType: string; targetId: string; metadata?: Record<string, unknown> }) => {
+    try {
+      const token = await getAuthToken();
+      if (!token) return;
+      const res = await fetch('/api/admin/audit-logs', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify(log),
+      });
+      if (!res.ok) throw new Error('Failed to create audit log');
+      const data = await res.json();
+      setAuditLogs(prev => [data.log, ...prev]);
+    } catch (err) {
+      console.error('Failed to create audit log:', err);
+    }
   }, []);
 
   // ── Jobs ────────────────────────────────────────────────────────────────────
@@ -186,7 +240,7 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       saveToStorage('sz_admin_jobs', updated);
       return updated;
     });
-    addLog({ actorId, action: 'JOB_APPROVED', targetType: 'Job', targetId: jobId });
+    addLog({ action: 'JOB_APPROVED', targetType: 'Job', targetId: jobId });
   }, [addLog]);
 
   const rejectJob = useCallback((jobId: string, actorId: string, note: string) => {
@@ -197,7 +251,7 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       saveToStorage('sz_admin_jobs', updated);
       return updated;
     });
-    addLog({ actorId, action: 'JOB_REJECTED', targetType: 'Job', targetId: jobId, metadata: { reason: note } });
+    addLog({ action: 'JOB_REJECTED', targetType: 'Job', targetId: jobId, metadata: { reason: note } });
   }, [addLog]);
 
   const archiveJob = useCallback((jobId: string, actorId: string) => {
@@ -208,7 +262,7 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       saveToStorage('sz_admin_jobs', updated);
       return updated;
     });
-    addLog({ actorId, action: 'JOB_ARCHIVED', targetType: 'Job', targetId: jobId });
+    addLog({ action: 'JOB_ARCHIVED', targetType: 'Job', targetId: jobId });
   }, [addLog]);
 
   const updateJobStatus = useCallback((jobId: string, status: JobStatus, actorId: string, note?: string) => {
@@ -219,7 +273,7 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       saveToStorage('sz_admin_jobs', updated);
       return updated;
     });
-    addLog({ actorId, action: `JOB_STATUS_CHANGED_${status}`, targetType: 'Job', targetId: jobId });
+    addLog({ action: `JOB_STATUS_CHANGED_${status}`, targetType: 'Job', targetId: jobId });
   }, [addLog]);
 
   // ── Categories ──────────────────────────────────────────────────────────────
@@ -241,7 +295,7 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       saveToStorage('sz_admin_categories', updated);
       return updated;
     });
-    addLog({ actorId, action: 'CATEGORY_TOGGLED', targetType: 'Category', targetId: categoryId });
+    addLog({ action: 'CATEGORY_TOGGLED', targetType: 'Category', targetId: categoryId });
   }, [addLog]);
 
   const renameCategory = useCallback((categoryId: string, name: string, slug: string, actorId: string) => {
@@ -252,7 +306,7 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       saveToStorage('sz_admin_categories', updated);
       return updated;
     });
-    addLog({ actorId, action: 'CATEGORY_RENAMED', targetType: 'Category', targetId: categoryId, metadata: { name, slug } });
+    addLog({ action: 'CATEGORY_RENAMED', targetType: 'Category', targetId: categoryId, metadata: { name, slug } });
   }, [addLog]);
 
   // ── Reports ─────────────────────────────────────────────────────────────────
@@ -265,47 +319,58 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       saveToStorage('sz_admin_reports', updated);
       return updated;
     });
-    addLog({ actorId, action: `REPORT_${status}`, targetType: 'Report', targetId: reportId });
+    addLog({ action: `REPORT_${status}`, targetType: 'Report', targetId: reportId });
   }, [addLog]);
 
   // ── Users ───────────────────────────────────────────────────────────────────
 
-  const banUser = useCallback((userId: string, reason: string, actorId: string) => {
-    setUsers(prev => {
-      const updated = prev.map(u =>
-        u.id === userId ? { ...u, isBanned: true, banReason: reason } : u
-      );
-      saveToStorage('sz_admin_users', updated);
-      return updated;
+  const banUser = useCallback(async (userId: string, reason: string, actorId: string) => {
+    const token = await getAuthToken();
+    if (!token) return;
+    const res = await fetch(`/api/admin/users/${userId}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ action: 'ban', reason }),
     });
-    addLog({ actorId, action: 'USER_BANNED', targetType: 'User', targetId: userId, metadata: { reason } });
-  }, [addLog]);
+    if (!res.ok) throw new Error('Failed to ban user');
+    const { user } = await res.json();
+    setUsers(prev => prev.map(u => u.id === userId ? { ...u, ...user } : u));
+    // Audit log already recorded server-side; refresh the list
+    fetchAuditLogs();
+  }, [fetchAuditLogs]);
 
-  const unbanUser = useCallback((userId: string, actorId: string) => {
-    setUsers(prev => {
-      const updated = prev.map(u =>
-        u.id === userId ? { ...u, isBanned: false, banReason: undefined } : u
-      );
-      saveToStorage('sz_admin_users', updated);
-      return updated;
+  const unbanUser = useCallback(async (userId: string, actorId: string) => {
+    const token = await getAuthToken();
+    if (!token) return;
+    const res = await fetch(`/api/admin/users/${userId}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ action: 'unban' }),
     });
-    addLog({ actorId, action: 'USER_UNBANNED', targetType: 'User', targetId: userId });
-  }, [addLog]);
+    if (!res.ok) throw new Error('Failed to unban user');
+    const { user } = await res.json();
+    setUsers(prev => prev.map(u => u.id === userId ? { ...u, ...user } : u));
+    fetchAuditLogs();
+  }, [fetchAuditLogs]);
 
-  const updateUserRole = useCallback((userId: string, role: UserRole, actorId: string) => {
-    setUsers(prev => {
-      const updated = prev.map(u =>
-        u.id === userId ? { ...u, role } : u
-      );
-      saveToStorage('sz_admin_users', updated);
-      return updated;
+  const updateUserRole = useCallback(async (userId: string, role: UserRole, actorId: string) => {
+    const token = await getAuthToken();
+    if (!token) return;
+    const res = await fetch(`/api/admin/users/${userId}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ action: 'updateRole', role }),
     });
-    addLog({ actorId, action: 'USER_ROLE_CHANGED', targetType: 'User', targetId: userId, metadata: { role } });
-  }, [addLog]);
+    if (!res.ok) throw new Error('Failed to update role');
+    const { user } = await res.json();
+    setUsers(prev => prev.map(u => u.id === userId ? { ...u, ...user } : u));
+    fetchAuditLogs();
+  }, [fetchAuditLogs]);
 
   return (
     <AdminContext.Provider value={{
-      users, jobs, categories, reports, auditLogs,
+      users, usersLoading, usersError, refreshUsers: fetchUsers,
+      jobs, categories, reports, auditLogs, auditLogsLoading, refreshAuditLogs: fetchAuditLogs,
       approveJob, rejectJob, archiveJob, updateJobStatus,
       addCategory, toggleCategory, renameCategory,
       updateReportStatus,

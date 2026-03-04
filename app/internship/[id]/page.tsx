@@ -23,14 +23,38 @@ export default function InternshipDetail() {
   const [reportDetails, setReportDetails] = useState('');
   const { showAlert } = useAlert();
 
-  // Look up job from static list or user-posted listings
+  // Look up job from static list, then fallback to DB
   const [job, setJob] = useState(() => INTERNSHIPS.find(i => i.id === id) || null);
 
   useEffect(() => {
-    if (!job) {
-      const userPosts = JSON.parse(localStorage.getItem('stepzen_user_posts') || '[]');
-      const found = userPosts.find((p: { id: string }) => p.id === id);
-      if (found) setJob(found);
+    if (!job && id) {
+      (async () => {
+        try {
+          const res = await fetch(`/api/jobs/${id}`);
+          if (res.ok) {
+            const j = await res.json();
+            setJob({
+              id: j.id,
+              title: j.title,
+              company: j.companyName,
+              location: j.location || 'Remote',
+              type: j.jobType || 'Remote',
+              category: j.category?.name || 'Fullstack',
+              postedDate: j.createdAt?.split('T')[0] || '',
+              deadline: j.deadline || j.expiresAt?.split('T')[0] || '',
+              summary: j.description || '',
+              responsibilities: Array.isArray(j.responsibilities) ? j.responsibilities : [],
+              requirements: Array.isArray(j.requirements) ? j.requirements : [],
+              skills: Array.isArray(j.skills) ? j.skills : [],
+              duration: j.duration || undefined,
+              stipend: j.stipend || undefined,
+              telegramApplyLink: j.telegramLink,
+            });
+          }
+        } catch {
+          // keep null – will show "not found"
+        }
+      })();
     }
   }, [id, job]);
 

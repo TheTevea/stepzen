@@ -111,3 +111,16 @@ export interface AuditLog {
   metadata?: Record<string, unknown>;
   createdAt: string;
 }
+
+/** Shape returned by the audit-logs API (includes resolved actor info) */
+export interface AuditLogEntry {
+  id: string;
+  actorId: string;
+  actorName: string;
+  actorEmail: string;
+  action: string;
+  targetType: string;
+  targetId: string;
+  metadata?: Record<string, unknown> | null;
+  createdAt: string;
+}

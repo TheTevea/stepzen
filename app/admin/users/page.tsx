@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useMemo } from 'react';
-import { Search, ShieldBan, ShieldCheck } from 'lucide-react';
+import { Search, ShieldBan, ShieldCheck, Loader2, AlertTriangle, RefreshCw } from 'lucide-react';
 import { useAdmin } from '@/context/AdminContext';
 import { useAuth } from '@/context/AuthContext';
 import { useAlert } from '@/context/AlertContext';
@@ -14,16 +14,17 @@ const ROLE_STYLES: Record<UserRole, string> = {
 };
 
 export default function AdminUsersPage() {
-  const { users, jobs, banUser, unbanUser, updateUserRole } = useAdmin();
+  const { users, usersLoading, usersError, refreshUsers, banUser, unbanUser, updateUserRole } = useAdmin();
   const { user } = useAuth();
   const { showAlert } = useAlert();
 
-  const adminUser = users.find(u => u.email === user?.email);
-  const actorId = adminUser?.id ?? 'u-1';
+  const currentAdmin = users.find(u => u.email === user?.email);
+  const actorId = currentAdmin?.id ?? '';
 
   const [search, setSearch] = useState('');
   const [banModal, setBanModal] = useState<{ userId: string; name: string } | null>(null);
   const [banReason, setBanReason] = useState('');
+  const [actionLoading, setActionLoading] = useState<string | null>(null);
 
   const filtered = useMemo(() => {
     if (!search.trim()) return users;
@@ -31,36 +32,61 @@ export default function AdminUsersPage() {
     return users.filter(u => u.name.toLowerCase().includes(q) || u.email.toLowerCase().includes(q));
   }, [users, search]);
 
-  const jobCountByUser = useMemo(() => {
-    const map: Record<string, number> = {};
-    jobs.forEach(j => { map[j.createdById] = (map[j.createdById] ?? 0) + 1; });
-    return map;
-  }, [jobs]);
-
-  const handleBan = () => {
+  const handleBan = async () => {
     if (!banModal || !banReason.trim()) return;
-    banUser(banModal.userId, banReason, actorId);
-    showAlert(`${banModal.name} has been banned.`, 'info');
-    setBanModal(null);
-    setBanReason('');
+    setActionLoading(banModal.userId);
+    try {
+      await banUser(banModal.userId, banReason, actorId);
+      showAlert(`${banModal.name} has been banned.`, 'info');
+    } catch {
+      showAlert('Failed to ban user.', 'error');
+    } finally {
+      setActionLoading(null);
+      setBanModal(null);
+      setBanReason('');
+    }
   };
 
-  const handleUnban = (userId: string, name: string) => {
-    unbanUser(userId, actorId);
-    showAlert(`${name} has been unbanned.`, 'success');
+  const handleUnban = async (userId: string, name: string) => {
+    setActionLoading(userId);
+    try {
+      await unbanUser(userId, actorId);
+      showAlert(`${name} has been unbanned.`, 'success');
+    } catch {
+      showAlert('Failed to unban user.', 'error');
+    } finally {
+      setActionLoading(null);
+    }
   };
 
-  const handleRoleChange = (userId: string, role: UserRole) => {
+  const handleRoleChange = async (userId: string, role: UserRole) => {
     if (userId === actorId) { showAlert("You can't change your own role.", 'error'); return; }
-    updateUserRole(userId, role, actorId);
-    showAlert('User role updated.', 'success');
+    setActionLoading(userId);
+    try {
+      await updateUserRole(userId, role, actorId);
+      showAlert('User role updated.', 'success');
+    } catch {
+      showAlert('Failed to update role.', 'error');
+    } finally {
+      setActionLoading(null);
+    }
   };
 
   return (
     <div className="p-6 max-w-5xl mx-auto">
-      <div className="mb-6">
-        <h1 className="text-2xl font-display font-bold">User Management</h1>
-        <p className="text-gray-500 font-medium text-sm mt-1">Search, manage roles, and ban/unban users.</p>
+      <div className="mb-6 flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-display font-bold">User Management</h1>
+          <p className="text-gray-500 font-medium text-sm mt-1">Search, manage roles, and ban/unban users.</p>
+        </div>
+        <button
+          onClick={refreshUsers}
+          disabled={usersLoading}
+          className="inline-flex items-center gap-2 px-3 py-2 bg-white border-2 border-black rounded-lg font-bold text-sm shadow-neo-sm hover:-translate-y-0.5 hover:shadow-none transition-all disabled:opacity-50"
+        >
+          <RefreshCw size={14} className={usersLoading ? 'animate-spin' : ''} />
+          Refresh
+        </button>
       </div>
 
       {/* Search */}
@@ -75,86 +101,114 @@ export default function AdminUsersPage() {
         />
       </div>
 
-      {/* Table */}
-      <div className="bg-white border-2 border-black rounded-xl shadow-neo overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b-2 border-black bg-gray-50">
-                <th className="px-4 py-3 text-left font-bold">User</th>
-                <th className="px-4 py-3 text-left font-bold">Role</th>
-                <th className="px-4 py-3 text-left font-bold">Jobs Posted</th>
-                <th className="px-4 py-3 text-left font-bold">Joined</th>
-                <th className="px-4 py-3 text-left font-bold">Status</th>
-                <th className="px-4 py-3 text-left font-bold">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y-2 divide-gray-100">
-              {filtered.map(u => (
-                <tr key={u.id} className={`hover:bg-gray-50 transition-colors ${u.isBanned ? 'opacity-60' : ''}`}>
-                  <td className="px-4 py-3">
-                    <p className="font-bold">{u.name}</p>
-                    <p className="text-gray-500 text-xs">{u.email}</p>
-                    {u.isBanned && u.banReason && (
-                      <p className="text-red-500 text-xs mt-0.5 italic">{u.banReason}</p>
-                    )}
-                  </td>
-                  <td className="px-4 py-3">
-                    {u.id === actorId ? (
-                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold border ${ROLE_STYLES[u.role]}`}>
-                        {u.role}
-                      </span>
-                    ) : (
-                      <select
-                        value={u.role}
-                        onChange={e => handleRoleChange(u.id, e.target.value as UserRole)}
-                        className={`text-xs font-bold px-2 py-1 border-2 rounded-lg focus:outline-none focus:border-black cursor-pointer ${ROLE_STYLES[u.role]}`}
-                      >
-                        <option value="SEEKER">SEEKER</option>
-                        <option value="EMPLOYER">EMPLOYER</option>
-                        <option value="ADMIN">ADMIN</option>
-                      </select>
-                    )}
-                  </td>
-                  <td className="px-4 py-3 text-gray-600 font-medium">{jobCountByUser[u.id] ?? 0}</td>
-                  <td className="px-4 py-3 text-gray-500">{new Date(u.createdAt).toLocaleDateString()}</td>
-                  <td className="px-4 py-3">
-                    {u.isBanned ? (
-                      <span className="text-xs font-bold text-red-600 bg-red-50 border border-red-300 px-2 py-0.5 rounded-full">Banned</span>
-                    ) : (
-                      <span className="text-xs font-bold text-green-600 bg-green-50 border border-green-300 px-2 py-0.5 rounded-full">Active</span>
-                    )}
-                  </td>
-                  <td className="px-4 py-3">
-                    {u.id !== actorId && (
-                      u.isBanned ? (
-                        <button
-                          onClick={() => handleUnban(u.id, u.name)}
-                          className="inline-flex items-center gap-1 px-3 py-1.5 bg-green-500 text-white border-2 border-black rounded-lg font-bold text-xs shadow-neo-sm hover:-translate-y-0.5 hover:shadow-none transition-all"
-                        >
-                          <ShieldCheck size={12} /> Unban
-                        </button>
-                      ) : (
-                        <button
-                          onClick={() => setBanModal({ userId: u.id, name: u.name })}
-                          className="inline-flex items-center gap-1 px-3 py-1.5 bg-red-500 text-white border-2 border-black rounded-lg font-bold text-xs shadow-neo-sm hover:-translate-y-0.5 hover:shadow-none transition-all"
-                        >
-                          <ShieldBan size={12} /> Ban
-                        </button>
-                      )
-                    )}
-                  </td>
-                </tr>
-              ))}
-              {filtered.length === 0 && (
-                <tr>
-                  <td colSpan={6} className="px-4 py-10 text-center text-gray-400 font-medium">No users found.</td>
-                </tr>
-              )}
-            </tbody>
-          </table>
+      {/* Loading state */}
+      {usersLoading && users.length === 0 && (
+        <div className="flex flex-col items-center justify-center py-20 text-gray-400">
+          <Loader2 size={32} className="animate-spin mb-3" />
+          <p className="font-medium text-sm">Loading users...</p>
         </div>
-      </div>
+      )}
+
+      {/* Error state */}
+      {usersError && users.length === 0 && (
+        <div className="flex flex-col items-center justify-center py-20 text-red-500">
+          <AlertTriangle size={32} className="mb-3" />
+          <p className="font-bold text-sm mb-2">Failed to load users</p>
+          <p className="text-gray-500 text-xs mb-4">{usersError}</p>
+          <button
+            onClick={refreshUsers}
+            className="px-4 py-2 bg-primary text-white border-2 border-black rounded-lg font-bold text-sm shadow-neo-sm hover:-translate-y-0.5 hover:shadow-none transition-all"
+          >
+            Retry
+          </button>
+        </div>
+      )}
+
+      {/* Table */}
+      {(!usersLoading || users.length > 0) && !usersError && (
+        <div className="bg-white border-2 border-black rounded-xl shadow-neo overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b-2 border-black bg-gray-50">
+                  <th className="px-4 py-3 text-left font-bold">User</th>
+                  <th className="px-4 py-3 text-left font-bold">Role</th>
+                  <th className="px-4 py-3 text-left font-bold">Jobs Posted</th>
+                  <th className="px-4 py-3 text-left font-bold">Joined</th>
+                  <th className="px-4 py-3 text-left font-bold">Status</th>
+                  <th className="px-4 py-3 text-left font-bold">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y-2 divide-gray-100">
+                {filtered.map(u => (
+                  <tr key={u.id} className={`hover:bg-gray-50 transition-colors ${u.isBanned ? 'opacity-60' : ''}`}>
+                    <td className="px-4 py-3">
+                      <p className="font-bold">{u.name}</p>
+                      <p className="text-gray-500 text-xs">{u.email}</p>
+                      {u.isBanned && u.banReason && (
+                        <p className="text-red-500 text-xs mt-0.5 italic">{u.banReason}</p>
+                      )}
+                    </td>
+                    <td className="px-4 py-3">
+                      {u.id === actorId ? (
+                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold border ${ROLE_STYLES[u.role]}`}>
+                          {u.role}
+                        </span>
+                      ) : (
+                        <select
+                          value={u.role}
+                          onChange={e => handleRoleChange(u.id, e.target.value as UserRole)}
+                          disabled={actionLoading === u.id}
+                          className={`text-xs font-bold px-2 py-1 border-2 rounded-lg focus:outline-none focus:border-black cursor-pointer disabled:opacity-50 ${ROLE_STYLES[u.role]}`}
+                        >
+                          <option value="SEEKER">SEEKER</option>
+                          <option value="EMPLOYER">EMPLOYER</option>
+                          <option value="ADMIN">ADMIN</option>
+                        </select>
+                      )}
+                    </td>
+                    <td className="px-4 py-3 text-gray-600 font-medium">{u.jobCount ?? 0}</td>
+                    <td className="px-4 py-3 text-gray-500">{new Date(u.createdAt).toLocaleDateString()}</td>
+                    <td className="px-4 py-3">
+                      {u.isBanned ? (
+                        <span className="text-xs font-bold text-red-600 bg-red-50 border border-red-300 px-2 py-0.5 rounded-full">Banned</span>
+                      ) : (
+                        <span className="text-xs font-bold text-green-600 bg-green-50 border border-green-300 px-2 py-0.5 rounded-full">Active</span>
+                      )}
+                    </td>
+                    <td className="px-4 py-3">
+                      {u.id !== actorId && (
+                        actionLoading === u.id ? (
+                          <Loader2 size={16} className="animate-spin text-gray-400" />
+                        ) : u.isBanned ? (
+                          <button
+                            onClick={() => handleUnban(u.id, u.name)}
+                            className="inline-flex items-center gap-1 px-3 py-1.5 bg-green-500 text-white border-2 border-black rounded-lg font-bold text-xs shadow-neo-sm hover:-translate-y-0.5 hover:shadow-none transition-all"
+                          >
+                            <ShieldCheck size={12} /> Unban
+                          </button>
+                        ) : (
+                          <button
+                            onClick={() => setBanModal({ userId: u.id, name: u.name })}
+                            className="inline-flex items-center gap-1 px-3 py-1.5 bg-red-500 text-white border-2 border-black rounded-lg font-bold text-xs shadow-neo-sm hover:-translate-y-0.5 hover:shadow-none transition-all"
+                          >
+                            <ShieldBan size={12} /> Ban
+                          </button>
+                        )
+                      )}
+                    </td>
+                  </tr>
+                ))}
+                {filtered.length === 0 && !usersLoading && (
+                  <tr>
+                    <td colSpan={6} className="px-4 py-10 text-center text-gray-400 font-medium">No users found.</td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
 
       {/* Ban modal */}
       {banModal && (
@@ -175,10 +229,10 @@ export default function AdminUsersPage() {
             <div className="flex gap-3">
               <button
                 onClick={handleBan}
-                disabled={!banReason.trim()}
+                disabled={!banReason.trim() || actionLoading === banModal.userId}
                 className="flex-1 py-2 bg-red-500 text-white border-2 border-black rounded-lg font-bold text-sm shadow-neo-sm hover:-translate-y-0.5 hover:shadow-none transition-all disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                Confirm Ban
+                {actionLoading === banModal.userId ? 'Banning...' : 'Confirm Ban'}
               </button>
               <button
                 onClick={() => { setBanModal(null); setBanReason(''); }}

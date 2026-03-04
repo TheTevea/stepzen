@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "prisma generate && next build",
     "start": "next start",
-    "preview": "next start"
+    "preview": "next start",
+    "admin:setup": "tsx --env-file=.env.local scripts/admin-setup.ts"
   },
   "dependencies": {
     "@prisma/adapter-pg": "^7.4.1",

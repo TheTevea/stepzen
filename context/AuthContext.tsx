@@ -35,7 +35,7 @@ async function syncUserToDatabase(email: string, name: string) {
 }
 
 /** Map a Supabase user object to our app's User shape */
-function mapSupabaseUser(su: SupabaseUser): User {
+async function mapSupabaseUser(su: SupabaseUser): Promise<User | null> {
   const email = su.email ?? '';
   const meta = su.user_metadata ?? {};
   const name =
@@ -43,9 +43,26 @@ function mapSupabaseUser(su: SupabaseUser): User {
     meta.full_name ??
     email.split('@')[0].charAt(0).toUpperCase() + email.split('@')[0].slice(1);
 
-  // Simple role check — admin by email convention
-  const isAdmin = email === 'admin@stepzen.com';
-  const role: UserRole = isAdmin ? 'ADMIN' : (meta.role as UserRole) ?? 'SEEKER';
+  // Fetch the real role from the Prisma database
+  let role: UserRole = 'SEEKER';
+  try {
+    const res = await fetch('/api/auth/sync-user', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, name }),
+    });
+    if (res.ok) {
+      const data = await res.json();
+      // If user is banned, sign them out and return null
+      if (data.user?.isBanned) {
+        await supabase.auth.signOut();
+        return null;
+      }
+      role = data.user?.role ?? 'SEEKER';
+    }
+  } catch {
+    // Fall back to SEEKER if the API call fails
+  }
 
   return { email, name, role };
 }
@@ -56,9 +73,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   useEffect(() => {
     // 1. Fetch the current session on mount
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
       if (session?.user) {
-        setUser(mapSupabaseUser(session.user));
+        const mapped = await mapSupabaseUser(session.user);
+        setUser(mapped); // null if banned — user will be signed out
       }
       setIsLoading(false);
     });
@@ -66,9 +84,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     // 2. Listen for auth changes (login, logout, token refresh)
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
+    } = supabase.auth.onAuthStateChange(async (_event, session) => {
       if (session?.user) {
-        setUser(mapSupabaseUser(session.user));
+        const mapped = await mapSupabaseUser(session.user);
+        setUser(mapped); // null if banned
       } else {
         setUser(null);
       }
@@ -81,11 +100,24 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const { data, error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) throw new Error(error.message);
 
-    // Ensure user exists in the Prisma User table
+    // Ensure user exists in the Prisma User table & check ban status
     if (data.user) {
       const meta = data.user.user_metadata ?? {};
       const name = meta.name ?? email.split('@')[0];
-      await syncUserToDatabase(email, name);
+
+      const res = await fetch('/api/auth/sync-user', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, name }),
+      });
+
+      if (res.ok) {
+        const syncData = await res.json();
+        if (syncData.user?.isBanned) {
+          await supabase.auth.signOut();
+          throw new Error('Your account has been banned. Please contact support for assistance.');
+        }
+      }
     }
   };
 

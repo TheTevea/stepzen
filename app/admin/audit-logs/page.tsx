@@ -1,14 +1,12 @@
 'use client';
 
 import React, { useState, useMemo } from 'react';
-import { Search } from 'lucide-react';
+import { Search, Loader2 } from 'lucide-react';
 import { useAdmin } from '@/context/AdminContext';
 
 export default function AdminAuditLogsPage() {
-  const { auditLogs, users } = useAdmin();
+  const { auditLogs, auditLogsLoading } = useAdmin();
   const [search, setSearch] = useState('');
-
-  const userMap = useMemo(() => Object.fromEntries(users.map(u => [u.id, u])), [users]);
 
   const filtered = useMemo(() => {
     if (!search.trim()) return auditLogs;
@@ -17,7 +15,9 @@ export default function AdminAuditLogsPage() {
       log =>
         log.action.toLowerCase().includes(q) ||
         log.targetType.toLowerCase().includes(q) ||
-        log.targetId.toLowerCase().includes(q)
+        log.targetId.toLowerCase().includes(q) ||
+        log.actorName.toLowerCase().includes(q) ||
+        log.actorEmail.toLowerCase().includes(q)
     );
   }, [auditLogs, search]);
 
@@ -32,6 +32,8 @@ export default function AdminAuditLogsPage() {
     RENAMED: 'bg-yellow-100 text-yellow-800',
     TOGGLED: 'bg-orange-100 text-orange-800',
     UNBANNED: 'bg-green-100 text-green-800',
+    REPLIED: 'bg-purple-100 text-purple-800',
+    ROLE_CHANGED: 'bg-indigo-100 text-indigo-800',
   };
 
   const getActionColor = (action: string) => {
@@ -53,7 +55,7 @@ export default function AdminAuditLogsPage() {
         <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
         <input
           type="text"
-          placeholder="Filter by action, target..."
+          placeholder="Filter by action, target, actor..."
           value={search}
           onChange={e => setSearch(e.target.value)}
           className="w-full pl-9 pr-3 py-2.5 border-2 border-gray-200 rounded-lg text-sm font-medium focus:outline-none focus:border-black transition-colors bg-white shadow-neo-sm"
@@ -61,21 +63,25 @@ export default function AdminAuditLogsPage() {
       </div>
 
       <div className="bg-white border-2 border-black rounded-xl shadow-neo overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b-2 border-black bg-gray-50">
-                <th className="px-4 py-3 text-left font-bold">Action</th>
-                <th className="px-4 py-3 text-left font-bold">Target</th>
-                <th className="px-4 py-3 text-left font-bold">Actor</th>
-                <th className="px-4 py-3 text-left font-bold">Details</th>
-                <th className="px-4 py-3 text-left font-bold">Timestamp</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y-2 divide-gray-100">
-              {filtered.map(log => {
-                const actor = userMap[log.actorId];
-                return (
+        {auditLogsLoading ? (
+          <div className="flex items-center justify-center py-16">
+            <Loader2 size={24} className="animate-spin text-gray-400 mr-2" />
+            <span className="text-gray-400 font-medium">Loading audit logs…</span>
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b-2 border-black bg-gray-50">
+                  <th className="px-4 py-3 text-left font-bold">Action</th>
+                  <th className="px-4 py-3 text-left font-bold">Target</th>
+                  <th className="px-4 py-3 text-left font-bold">Actor</th>
+                  <th className="px-4 py-3 text-left font-bold">Details</th>
+                  <th className="px-4 py-3 text-left font-bold">Timestamp</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y-2 divide-gray-100">
+                {filtered.map(log => (
                   <tr key={log.id} className="hover:bg-gray-50 transition-colors">
                     <td className="px-4 py-3">
                       <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold border border-current/30 ${getActionColor(log.action)}`}>
@@ -87,8 +93,8 @@ export default function AdminAuditLogsPage() {
                       <p className="text-gray-400 text-xs font-mono">{log.targetId}</p>
                     </td>
                     <td className="px-4 py-3">
-                      <p className="font-bold">{actor?.name ?? '—'}</p>
-                      <p className="text-gray-400 text-xs">{actor?.email}</p>
+                      <p className="font-bold">{log.actorName}</p>
+                      <p className="text-gray-400 text-xs">{log.actorEmail}</p>
                     </td>
                     <td className="px-4 py-3 max-w-[200px]">
                       {log.metadata ? (
@@ -103,16 +109,16 @@ export default function AdminAuditLogsPage() {
                       {new Date(log.createdAt).toLocaleString()}
                     </td>
                   </tr>
-                );
-              })}
-              {filtered.length === 0 && (
-                <tr>
-                  <td colSpan={5} className="px-4 py-10 text-center text-gray-400 font-medium">No logs found.</td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
+                ))}
+                {filtered.length === 0 && (
+                  <tr>
+                    <td colSpan={5} className="px-4 py-10 text-center text-gray-400 font-medium">No logs found.</td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
     </div>
   );

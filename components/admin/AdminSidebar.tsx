@@ -10,6 +10,7 @@ import {
   Flag,
   Users,
   ScrollText,
+  MessageSquare,
   LogOut,
   Menu,
   X,
@@ -24,6 +25,7 @@ const navItems = [
   { label: 'Categories', href: '/admin/categories', icon: Tag },
   { label: 'Reports', href: '/admin/reports', icon: Flag },
   { label: 'Users', href: '/admin/users', icon: Users },
+  { label: 'Messages', href: '/admin/messages', icon: MessageSquare },
   { label: 'Audit Logs', href: '/admin/audit-logs', icon: ScrollText },
 ];
 
@@ -102,7 +104,7 @@ export const AdminSidebar: React.FC = () => {
   return (
     <>
       {/* Desktop sidebar */}
-      <aside className="hidden md:flex flex-col w-60 shrink-0 bg-white border-r-2 border-black min-h-screen sticky top-0">
+      <aside className="hidden md:flex flex-col w-60 shrink-0 bg-white border-r-2 border-black h-screen sticky top-0 overflow-y-auto">
         <SidebarContent />
       </aside>
 

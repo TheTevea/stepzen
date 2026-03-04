@@ -5,7 +5,7 @@ import { Filter } from 'lucide-react';
 import { INTERNSHIPS } from '@/constants';
 import { JobCard } from '@/components/JobCard';
 import { Button } from '@/components/Button';
-import { FilterState } from '@/types';
+import { FilterState, Internship } from '@/types';
 import { PageTemplate } from '@/components/PageTemplate';
 import { FilterPanel } from '@/components/internships/FilterPanel';
 
@@ -21,14 +21,41 @@ export default function Internships() {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 6;
 
-  // Merge static internships with user-posted ones from localStorage
+  // Merge static internships with DB-fetched ones
   const [allInternships, setAllInternships] = useState(INTERNSHIPS);
 
   useEffect(() => {
-    const userPosts = JSON.parse(localStorage.getItem('stepzen_user_posts') || '[]');
-    if (userPosts.length > 0) {
-      setAllInternships([...userPosts, ...INTERNSHIPS]);
-    }
+    (async () => {
+      try {
+        const res = await fetch('/api/jobs');
+        if (res.ok) {
+          const dbJobs = await res.json();
+          // Map DB shape → Internship type used by JobCard
+          const mapped: Internship[] = dbJobs.map((j: Record<string, unknown>) => ({
+            id: j.id as string,
+            title: j.title as string,
+            company: j.companyName as string,
+            location: (j.location as string) || 'Remote',
+            type: ((j.jobType as string) || 'Remote') as Internship['type'],
+            category: ((j.category as Record<string, unknown>)?.name as string || 'Fullstack') as Internship['category'],
+            postedDate: (j.createdAt as string)?.split('T')[0] || new Date().toISOString().split('T')[0],
+            deadline: (j.deadline as string) || (j.expiresAt as string)?.split('T')[0] || '',
+            summary: (j.description as string) || '',
+            responsibilities: Array.isArray(j.responsibilities) ? j.responsibilities as string[] : [],
+            requirements: Array.isArray(j.requirements) ? j.requirements as string[] : [],
+            skills: Array.isArray(j.skills) ? j.skills as string[] : [],
+            duration: (j.duration as string) || undefined,
+            stipend: (j.stipend as string) || undefined,
+            telegramApplyLink: j.telegramLink as string,
+          }));
+          if (mapped.length > 0) {
+            setAllInternships([...mapped, ...INTERNSHIPS]);
+          }
+        }
+      } catch {
+        // fallback to static only
+      }
+    })();
   }, []);
 
   // Extract unique options for dropdowns
