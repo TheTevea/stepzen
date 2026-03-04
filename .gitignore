@@ -32,4 +32,4 @@ build
 *.old
 pages_old/
 
-/src/generated/prisma
+/generated/prisma
