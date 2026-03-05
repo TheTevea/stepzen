@@ -38,9 +38,9 @@ export const Header: React.FC = () => {
       <div className="max-w-7xl mx-auto px-4 ">
         <div className="flex justify-between items-center h-16 md:h-20">
           {/* Logo */}
-          <Link href="/" className="relative flex items-center gap-1 group self-stretch">
-            <img src="/assets/images/icon_stepzen.png" alt="Stepzen Logo" className="h-14" />
-            <span className="text-4xl font-black tracking-tight text-gray-900">
+          <Link href="/" className="relative flex items-center group self-stretch">
+            <img src="/assets/images/icon_stepzen.png" alt="Stepzen Logo" className="h-8 md:h-14" />
+            <span className="text-2xl md:text-4xl font-black tracking-tight text-gray-900">
               Step<span className="text-primary">Z</span>en
             </span>
           </Link>
