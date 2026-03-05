@@ -2,7 +2,7 @@
 
 import React, { useState, useMemo } from 'react';
 import Link from 'next/link';
-import { ExternalLink } from 'lucide-react';
+import { ExternalLink, Loader2 } from 'lucide-react';
 import { useAdmin } from '@/context/AdminContext';
 import { useAuth } from '@/context/AuthContext';
 import { useAlert } from '@/context/AlertContext';
@@ -18,7 +18,7 @@ const STATUS_OPTS: { value: string; label: string }[] = [
 ];
 
 export default function AdminReportsPage() {
-  const { reports, jobs, users, updateReportStatus, archiveJob } = useAdmin();
+  const { reports, reportsLoading, jobs, users, updateReportStatus, archiveJob } = useAdmin();
   const { user } = useAuth();
   const { showAlert } = useAlert();
 
@@ -37,17 +37,29 @@ export default function AdminReportsPage() {
       .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
   }, [reports, statusFilter]);
 
-  const handleAction = (reportId: string, status: ReportStatus) => {
+  const handleAction = async (reportId: string, status: ReportStatus) => {
     const note = noteMap[reportId] || undefined;
-    updateReportStatus(reportId, status, actorId, note);
+    await updateReportStatus(reportId, status, actorId, note);
     showAlert(`Report marked as ${status.replace('_', ' ').toLowerCase()}.`, 'success');
   };
 
   const handleArchiveJob = async (jobId: string, reportId: string) => {
     await archiveJob(jobId);
-    updateReportStatus(reportId, 'RESOLVED', actorId, 'Job archived after report review.');
+    await updateReportStatus(reportId, 'RESOLVED', actorId, 'Job archived after report review.');
     showAlert('Job archived and report resolved.', 'success');
   };
+
+  if (reportsLoading) {
+    return (
+      <div className="p-6 max-w-5xl mx-auto">
+        <h1 className="text-2xl font-display font-bold mb-4">Reports</h1>
+        <div className="flex items-center justify-center py-20">
+          <Loader2 size={28} className="animate-spin text-primary mr-2" />
+          <span className="text-gray-500 font-medium">Loading reports…</span>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="p-6 max-w-5xl mx-auto">

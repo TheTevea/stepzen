@@ -72,6 +72,7 @@ export async function PATCH(
       case 'archive':
         updateData = {
           status: 'ARCHIVED',
+          archivedAt: new Date(),
           reviewedById: admin.id,
           reviewNote: note || null,
         };

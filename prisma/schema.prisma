@@ -110,6 +110,7 @@ model Job {
   reviewedBy   User?     @relation("JobsReviewedByAdmin", fields: [reviewedById], references: [id])
   reviewNote   String?
   publishedAt  DateTime?
+  archivedAt   DateTime?
   expiresAt    DateTime?
 
   savedBy      SavedJob[]

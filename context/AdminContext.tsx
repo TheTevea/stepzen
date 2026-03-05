@@ -28,24 +28,6 @@ const DEFAULT_CATEGORIES: Category[] = [
 
 
 
-const DEFAULT_REPORTS: JobReport[] = [
-  {
-    id: 'r-1', jobId: 'j-1', reportedById: 'u-3', reason: 'SPAM',
-    message: 'This looks like a duplicate posting.', status: 'OPEN',
-    createdAt: '2024-03-15T00:00:00Z', updatedAt: '2024-03-15T00:00:00Z',
-  },
-  {
-    id: 'r-2', jobId: 'j-4', reportedById: 'u-3', reason: 'SCAM',
-    message: 'Company does not exist.', status: 'IN_REVIEW', handledById: 'u-1',
-    createdAt: '2024-03-09T00:00:00Z', updatedAt: '2024-03-10T00:00:00Z',
-  },
-  {
-    id: 'r-3', jobId: 'j-5', reportedById: 'u-3', reason: 'INAPPROPRIATE',
-    message: 'Content violates terms.', status: 'RESOLVED', handledById: 'u-1',
-    handledNote: 'Job archived after review.', createdAt: '2024-02-25T00:00:00Z', updatedAt: '2024-02-28T00:00:00Z',
-  },
-];
-
 
 
 
@@ -66,6 +48,8 @@ interface AdminContextType {
   refreshJobs: () => Promise<void>;
   categories: Category[];
   reports: JobReport[];
+  reportsLoading: boolean;
+  refreshReports: () => Promise<void>;
   auditLogs: AuditLogEntry[];
   auditLogsLoading: boolean;
   refreshAuditLogs: () => Promise<void>;
@@ -81,7 +65,7 @@ interface AdminContextType {
   renameCategory: (categoryId: string, name: string, slug: string, actorId: string) => void;
 
   // Reports
-  updateReportStatus: (reportId: string, status: ReportStatus, actorId: string, note?: string) => void;
+  updateReportStatus: (reportId: string, status: ReportStatus, actorId: string, note?: string) => Promise<void>;
 
   // Users
   banUser: (userId: string, reason: string, actorId: string) => Promise<void>;
@@ -123,6 +107,7 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const [jobsError, setJobsError] = useState<string | null>(null);
   const [categories, setCategories] = useState<Category[]>([]);
   const [reports, setReports] = useState<JobReport[]>([]);
+  const [reportsLoading, setReportsLoading] = useState(true);
   const [auditLogs, setAuditLogs] = useState<AuditLogEntry[]>([]);
   const [auditLogsLoading, setAuditLogsLoading] = useState(true);
 
@@ -182,11 +167,29 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     }
   }, []);
 
+  const fetchReports = useCallback(async () => {
+    setReportsLoading(true);
+    try {
+      const token = await getAuthToken();
+      if (!token) return;
+      const res = await fetch('/api/admin/reports', {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!res.ok) throw new Error('Failed to fetch reports');
+      const data = await res.json();
+      setReports(data.reports);
+    } catch (err) {
+      console.error('Failed to fetch reports:', err);
+    } finally {
+      setReportsLoading(false);
+    }
+  }, []);
+
   useEffect(() => {
     fetchUsers();
     fetchJobs();
     fetchAuditLogs();
-    setReports(loadFromStorage('sz_admin_reports', DEFAULT_REPORTS));
+    fetchReports();
 
     // Fetch categories from API (database), fallback to localStorage
     fetch('/api/categories')
@@ -198,7 +201,7 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       .catch(() => {
         setCategories(loadFromStorage('sz_admin_categories', DEFAULT_CATEGORIES));
       });
-  }, [fetchUsers, fetchJobs, fetchAuditLogs]);
+  }, [fetchUsers, fetchJobs, fetchAuditLogs, fetchReports]);
 
   const addLog = useCallback(async (log: { action: string; targetType: string; targetId: string; metadata?: Record<string, unknown> }) => {
     try {
@@ -293,16 +296,22 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   // ── Reports ─────────────────────────────────────────────────────────────────
 
-  const updateReportStatus = useCallback((reportId: string, status: ReportStatus, actorId: string, note?: string) => {
-    setReports(prev => {
-      const updated = prev.map(r =>
-        r.id === reportId ? { ...r, status, handledById: actorId, handledNote: note, updatedAt: new Date().toISOString() } : r
-      );
-      saveToStorage('sz_admin_reports', updated);
-      return updated;
-    });
-    addLog({ action: `REPORT_${status}`, targetType: 'Report', targetId: reportId });
-  }, [addLog]);
+  const updateReportStatus = useCallback(async (reportId: string, status: ReportStatus, _actorId: string, note?: string) => {
+    try {
+      const token = await getAuthToken();
+      if (!token) return;
+      const res = await fetch(`/api/admin/reports/${reportId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ status, note }),
+      });
+      if (!res.ok) throw new Error('Failed to update report');
+      await fetchReports();
+      fetchAuditLogs();
+    } catch (err) {
+      console.error('Failed to update report status:', err);
+    }
+  }, [fetchReports, fetchAuditLogs]);
 
   // ── Users ───────────────────────────────────────────────────────────────────
 
@@ -353,7 +362,8 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     <AdminContext.Provider value={{
       users, usersLoading, usersError, refreshUsers: fetchUsers,
       jobs, jobsLoading, jobsError, refreshJobs: fetchJobs,
-      categories, reports, auditLogs, auditLogsLoading, refreshAuditLogs: fetchAuditLogs,
+      categories, reports, reportsLoading, refreshReports: fetchReports,
+      auditLogs, auditLogsLoading, refreshAuditLogs: fetchAuditLogs,
       approveJob, rejectJob, archiveJob,
       addCategory, toggleCategory, renameCategory,
       updateReportStatus,
