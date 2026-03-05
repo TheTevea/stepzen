@@ -13,6 +13,7 @@ export async function GET(
       where: { id },
       include: {
         category: true,
+        location: true,
         createdBy: { select: { name: true, email: true } },
       },
     });

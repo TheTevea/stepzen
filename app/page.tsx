@@ -1,18 +1,101 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Terminal, Coffee, CheckCircle, ExternalLink } from 'lucide-react';
 import { Button } from '../components/Button';
 import { JobCard } from '../components/JobCard';
 import { INTERNSHIPS } from '../constants';
+import { Internship } from '../types';
 import { PageTemplate } from '../components/PageTemplate';
 import { HeroSection } from '../components/home/HeroSection';
 import { TestimonialStrip } from '../components/home/TestimonialStrip';
 
+/** Map a DB job object (from /api/jobs) to the Internship type used by JobCard */
+function mapDbJob(j: Record<string, unknown>): Internship {
+  return {
+    id: j.id as string,
+    title: j.title as string,
+    company: j.companyName as string,
+    location: ((j.location as Record<string, unknown>)?.name as string) || 'Remote',
+    type: ((j.jobType as string) || 'Remote') as Internship['type'],
+    category: ((j.category as Record<string, unknown>)?.name as string || 'Fullstack') as Internship['category'],
+    postedDate: (j.createdAt as string)?.split('T')[0] || new Date().toISOString().split('T')[0],
+    deadline: (j.deadline as string) || (j.expiresAt as string)?.split('T')[0] || '',
+    summary: (j.description as string) || '',
+    responsibilities: Array.isArray(j.responsibilities) ? j.responsibilities as string[] : [],
+    requirements: Array.isArray(j.requirements) ? j.requirements as string[] : [],
+    skills: Array.isArray(j.skills) ? j.skills as string[] : [],
+    duration: (j.duration as string) || undefined,
+    stipend: (j.stipend as string) || undefined,
+    telegramApplyLink: j.telegramLink as string,
+  };
+}
+
+function JobCardSkeleton() {
+  return (
+    <div className="flex flex-col h-full bg-white border-2 border-black rounded-xl p-5 shadow-neo animate-pulse">
+      <div className="flex justify-between items-start mb-4">
+        <div className="flex-1">
+          <div className="h-6 w-3/4 bg-gray-200 rounded mb-2" />
+          <div className="h-4 w-1/2 bg-gray-200 rounded" />
+        </div>
+        <div className="w-10 h-10 rounded-lg bg-gray-200 shrink-0" />
+      </div>
+      <div className="flex gap-2 mb-4">
+        <div className="h-6 w-16 bg-gray-200 rounded-full" />
+        <div className="h-6 w-20 bg-gray-200 rounded-full" />
+      </div>
+      <div className="space-y-2 mb-6 flex-grow">
+        <div className="h-4 w-full bg-gray-200 rounded" />
+        <div className="h-4 w-5/6 bg-gray-200 rounded" />
+        <div className="flex gap-4 pt-2">
+          <div className="h-3 w-24 bg-gray-200 rounded" />
+          <div className="h-3 w-28 bg-gray-200 rounded" />
+        </div>
+      </div>
+      <div className="mt-auto pt-4 border-t-2 border-gray-100 flex gap-3">
+        <div className="flex-1 h-9 bg-gray-200 rounded-full" />
+        <div className="h-9 w-12 bg-gray-200 rounded-full" />
+      </div>
+    </div>
+  );
+}
+
 export default function Home() {
-  const featuredInternships = INTERNSHIPS.slice(0, 3);
+  const [featuredJobs, setFeaturedJobs] = useState<Internship[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    (async () => {
+      try {
+        const res = await fetch('/api/jobs');
+        if (!cancelled && res.ok) {
+          const dbJobs = await res.json();
+          const mapped = (dbJobs as Record<string, unknown>[]).map(mapDbJob);
+          if (mapped.length > 0) {
+            setFeaturedJobs(mapped.slice(0, 3));
+          } else {
+            // API returned 0 published jobs – use static fallback
+            setFeaturedJobs(INTERNSHIPS.slice(0, 3));
+          }
+        } else if (!cancelled) {
+          setFeaturedJobs(INTERNSHIPS.slice(0, 3));
+        }
+      } catch {
+        if (!cancelled) {
+          setFeaturedJobs(INTERNSHIPS.slice(0, 3));
+        }
+      } finally {
+        if (!cancelled) setIsLoading(false);
+      }
+    })();
+
+    return () => { cancelled = true; };
+  }, []);
 
   return (
     <PageTemplate>
@@ -46,9 +129,17 @@ export default function Home() {
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {featuredInternships.map(job => (
-              <JobCard key={job.id} job={job} />
-            ))}
+            {isLoading ? (
+              <>
+                <JobCardSkeleton />
+                <JobCardSkeleton />
+                <JobCardSkeleton />
+              </>
+            ) : (
+              featuredJobs.map(job => (
+                <JobCard key={job.id} job={job} />
+              ))
+            )}
           </div>
           
           <div className="text-center mt-12">

@@ -35,7 +35,7 @@ export default function Internships() {
             id: j.id as string,
             title: j.title as string,
             company: j.companyName as string,
-            location: (j.location as string) || 'Remote',
+            location: ((j.location as Record<string, unknown>)?.name as string) || 'Remote',
             type: ((j.jobType as string) || 'Remote') as Internship['type'],
             category: ((j.category as Record<string, unknown>)?.name as string || 'Fullstack') as Internship['category'],
             postedDate: (j.createdAt as string)?.split('T')[0] || new Date().toISOString().split('T')[0],
@@ -58,9 +58,38 @@ export default function Internships() {
     })();
   }, []);
 
-  // Extract unique options for dropdowns
-  const locations = [...new Set(allInternships.map(i => i.location.split(', ')[1] || i.location))];
-  const categories = [...new Set(allInternships.map(i => i.category))];
+  // Fetch real locations + categories from backend for filter dropdowns
+  const [dbLocations, setDbLocations] = useState<string[]>([]);
+  const [dbCategories, setDbCategories] = useState<string[]>([]);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const [locRes, catRes] = await Promise.all([
+          fetch('/api/locations'),
+          fetch('/api/categories'),
+        ]);
+        if (locRes.ok) {
+          const locs = await locRes.json();
+          setDbLocations(locs.map((l: { name: string }) => l.name));
+        }
+        if (catRes.ok) {
+          const cats = await catRes.json();
+          setDbCategories(cats.map((c: { name: string }) => c.name));
+        }
+      } catch {
+        // fall back to deriving from data
+      }
+    })();
+  }, []);
+
+  // Fallback: derive from loaded internships if API failed
+  const locations = dbLocations.length > 0
+    ? dbLocations
+    : [...new Set(allInternships.map(i => i.location))];
+  const categories = dbCategories.length > 0
+    ? dbCategories
+    : [...new Set(allInternships.map(i => i.category))];
 
   const filteredInternships = useMemo(() => {
     let result = [...allInternships];

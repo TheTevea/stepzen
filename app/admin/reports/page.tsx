@@ -43,8 +43,8 @@ export default function AdminReportsPage() {
     showAlert(`Report marked as ${status.replace('_', ' ').toLowerCase()}.`, 'success');
   };
 
-  const handleArchiveJob = (jobId: string, reportId: string) => {
-    archiveJob(jobId, actorId);
+  const handleArchiveJob = async (jobId: string, reportId: string) => {
+    await archiveJob(jobId);
     updateReportStatus(reportId, 'RESOLVED', actorId, 'Job archived after report review.');
     showAlert('Job archived and report resolved.', 'success');
   };

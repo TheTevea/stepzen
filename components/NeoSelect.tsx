@@ -63,7 +63,7 @@ export const NeoSelect: React.FC<NeoSelectProps> = ({
         </button>
 
         {open && (
-          <div className="absolute z-50 top-full left-0 right-0 mt-1 bg-white border-2 border-black rounded-lg shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] overflow-hidden animate-in fade-in slide-in-from-top-1 duration-150">
+          <div className="absolute z-50 top-full left-0 right-0 mt-1 bg-white border-2 border-black rounded-lg shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] overflow-hidden animate-in fade-in slide-in-from-top-1 duration-150 max-h-[288px] overflow-y-auto custom-scrollbar">
             {options.map((option) => (
               <button
                 key={option.value}

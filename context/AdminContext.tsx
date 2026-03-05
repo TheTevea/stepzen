@@ -26,43 +26,7 @@ const DEFAULT_CATEGORIES: Category[] = [
 
 
 
-const DEFAULT_JOBS: AdminJob[] = [
-  {
-    id: 'j-1', title: 'Frontend React Engineer', description: 'Build beautiful UIs using React and Tailwind CSS.',
-    companyName: 'PixelPerfect', location: 'San Francisco, CA', jobType: 'Remote',
-    telegramLink: 'https://t.me/+xYrIev4OEHk2MTY1', categoryId: 'cat-1', createdById: 'u-2',
-    status: 'PUBLISHED', publishedAt: '2024-03-01T00:00:00Z', viewCount: 142,
-    createdAt: '2024-02-28T00:00:00Z', updatedAt: '2024-03-01T00:00:00Z',
-  },
-  {
-    id: 'j-2', title: 'Backend Node.js Intern', description: 'Dive deep into scalable APIs and microservices.',
-    companyName: 'ServerSide Solutions', location: 'New York, NY', jobType: 'Hybrid',
-    telegramLink: 'https://t.me/+xYrIev4OEHk2MTY1', categoryId: 'cat-2', createdById: 'u-2',
-    status: 'PENDING_REVIEW', viewCount: 0,
-    createdAt: '2024-03-10T00:00:00Z', updatedAt: '2024-03-10T00:00:00Z',
-  },
-  {
-    id: 'j-3', title: 'UI/UX Designer', description: 'Create user-centered designs for web products.',
-    companyName: 'DesignHub', location: 'Remote', jobType: 'Remote',
-    telegramLink: 'https://t.me/+xYrIev4OEHk2MTY1', categoryId: 'cat-4', createdById: 'u-2',
-    status: 'PENDING_REVIEW', viewCount: 0,
-    createdAt: '2024-03-12T00:00:00Z', updatedAt: '2024-03-12T00:00:00Z',
-  },
-  {
-    id: 'j-4', title: 'Data Science Intern', description: 'Work on ML models and data pipelines.',
-    companyName: 'DataMind', location: 'Boston, MA', jobType: 'Onsite',
-    telegramLink: 'https://t.me/+xYrIev4OEHk2MTY1', categoryId: 'cat-6', createdById: 'u-2',
-    status: 'REJECTED', reviewNote: 'Missing valid Telegram link format.', reviewedById: 'u-1',
-    viewCount: 0, createdAt: '2024-03-08T00:00:00Z', updatedAt: '2024-03-09T00:00:00Z',
-  },
-  {
-    id: 'j-5', title: 'Mobile Flutter Developer', description: 'Build cross-platform apps using Flutter.',
-    companyName: 'AppFactory', location: 'Remote', jobType: 'Remote',
-    telegramLink: 'https://t.me/+xYrIev4OEHk2MTY1', categoryId: 'cat-5', createdById: 'u-2',
-    status: 'ARCHIVED', viewCount: 55,
-    createdAt: '2024-02-01T00:00:00Z', updatedAt: '2024-02-28T00:00:00Z',
-  },
-];
+
 
 const DEFAULT_REPORTS: JobReport[] = [
   {
@@ -97,6 +61,9 @@ interface AdminContextType {
   usersError: string | null;
   refreshUsers: () => Promise<void>;
   jobs: AdminJob[];
+  jobsLoading: boolean;
+  jobsError: string | null;
+  refreshJobs: () => Promise<void>;
   categories: Category[];
   reports: JobReport[];
   auditLogs: AuditLogEntry[];
@@ -104,10 +71,9 @@ interface AdminContextType {
   refreshAuditLogs: () => Promise<void>;
 
   // Jobs
-  approveJob: (jobId: string, actorId: string) => void;
-  rejectJob: (jobId: string, actorId: string, note: string) => void;
-  archiveJob: (jobId: string, actorId: string) => void;
-  updateJobStatus: (jobId: string, status: JobStatus, actorId: string, note?: string) => void;
+  approveJob: (jobId: string) => Promise<void>;
+  rejectJob: (jobId: string, note: string) => Promise<void>;
+  archiveJob: (jobId: string) => Promise<void>;
 
   // Categories
   addCategory: (name: string, slug: string) => void;
@@ -153,6 +119,8 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const [usersLoading, setUsersLoading] = useState(true);
   const [usersError, setUsersError] = useState<string | null>(null);
   const [jobs, setJobs] = useState<AdminJob[]>([]);
+  const [jobsLoading, setJobsLoading] = useState(true);
+  const [jobsError, setJobsError] = useState<string | null>(null);
   const [categories, setCategories] = useState<Category[]>([]);
   const [reports, setReports] = useState<JobReport[]>([]);
   const [auditLogs, setAuditLogs] = useState<AuditLogEntry[]>([]);
@@ -195,10 +163,29 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     }
   }, []);
 
+  const fetchJobs = useCallback(async () => {
+    setJobsLoading(true);
+    setJobsError(null);
+    try {
+      const token = await getAuthToken();
+      if (!token) throw new Error('Not authenticated');
+      const res = await fetch('/api/admin/jobs', {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!res.ok) throw new Error('Failed to fetch jobs');
+      const data = await res.json();
+      setJobs(data.jobs);
+    } catch (err) {
+      setJobsError(err instanceof Error ? err.message : 'Unknown error');
+    } finally {
+      setJobsLoading(false);
+    }
+  }, []);
+
   useEffect(() => {
     fetchUsers();
+    fetchJobs();
     fetchAuditLogs();
-    setJobs(loadFromStorage('sz_admin_jobs', DEFAULT_JOBS));
     setReports(loadFromStorage('sz_admin_reports', DEFAULT_REPORTS));
 
     // Fetch categories from API (database), fallback to localStorage
@@ -211,7 +198,7 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       .catch(() => {
         setCategories(loadFromStorage('sz_admin_categories', DEFAULT_CATEGORIES));
       });
-  }, [fetchUsers, fetchAuditLogs]);
+  }, [fetchUsers, fetchJobs, fetchAuditLogs]);
 
   const addLog = useCallback(async (log: { action: string; targetType: string; targetId: string; metadata?: Record<string, unknown> }) => {
     try {
@@ -232,49 +219,44 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   // ── Jobs ────────────────────────────────────────────────────────────────────
 
-  const approveJob = useCallback((jobId: string, actorId: string) => {
-    setJobs(prev => {
-      const updated = prev.map(j =>
-        j.id === jobId ? { ...j, status: 'PUBLISHED' as JobStatus, publishedAt: new Date().toISOString(), updatedAt: new Date().toISOString() } : j
-      );
-      saveToStorage('sz_admin_jobs', updated);
-      return updated;
+  const approveJob = useCallback(async (jobId: string) => {
+    const token = await getAuthToken();
+    if (!token) return;
+    const res = await fetch(`/api/admin/jobs/${jobId}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ action: 'approve' }),
     });
-    addLog({ action: 'JOB_APPROVED', targetType: 'Job', targetId: jobId });
-  }, [addLog]);
+    if (!res.ok) throw new Error('Failed to approve job');
+    await fetchJobs();
+    fetchAuditLogs();
+  }, [fetchJobs, fetchAuditLogs]);
 
-  const rejectJob = useCallback((jobId: string, actorId: string, note: string) => {
-    setJobs(prev => {
-      const updated = prev.map(j =>
-        j.id === jobId ? { ...j, status: 'REJECTED' as JobStatus, reviewNote: note, reviewedById: actorId, updatedAt: new Date().toISOString() } : j
-      );
-      saveToStorage('sz_admin_jobs', updated);
-      return updated;
+  const rejectJob = useCallback(async (jobId: string, note: string) => {
+    const token = await getAuthToken();
+    if (!token) return;
+    const res = await fetch(`/api/admin/jobs/${jobId}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ action: 'reject', note }),
     });
-    addLog({ action: 'JOB_REJECTED', targetType: 'Job', targetId: jobId, metadata: { reason: note } });
-  }, [addLog]);
+    if (!res.ok) throw new Error('Failed to reject job');
+    await fetchJobs();
+    fetchAuditLogs();
+  }, [fetchJobs, fetchAuditLogs]);
 
-  const archiveJob = useCallback((jobId: string, actorId: string) => {
-    setJobs(prev => {
-      const updated = prev.map(j =>
-        j.id === jobId ? { ...j, status: 'ARCHIVED' as JobStatus, updatedAt: new Date().toISOString() } : j
-      );
-      saveToStorage('sz_admin_jobs', updated);
-      return updated;
+  const archiveJob = useCallback(async (jobId: string) => {
+    const token = await getAuthToken();
+    if (!token) return;
+    const res = await fetch(`/api/admin/jobs/${jobId}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ action: 'archive' }),
     });
-    addLog({ action: 'JOB_ARCHIVED', targetType: 'Job', targetId: jobId });
-  }, [addLog]);
-
-  const updateJobStatus = useCallback((jobId: string, status: JobStatus, actorId: string, note?: string) => {
-    setJobs(prev => {
-      const updated = prev.map(j =>
-        j.id === jobId ? { ...j, status, reviewNote: note, reviewedById: actorId, updatedAt: new Date().toISOString() } : j
-      );
-      saveToStorage('sz_admin_jobs', updated);
-      return updated;
-    });
-    addLog({ action: `JOB_STATUS_CHANGED_${status}`, targetType: 'Job', targetId: jobId });
-  }, [addLog]);
+    if (!res.ok) throw new Error('Failed to archive job');
+    await fetchJobs();
+    fetchAuditLogs();
+  }, [fetchJobs, fetchAuditLogs]);
 
   // ── Categories ──────────────────────────────────────────────────────────────
 
@@ -370,8 +352,9 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   return (
     <AdminContext.Provider value={{
       users, usersLoading, usersError, refreshUsers: fetchUsers,
-      jobs, categories, reports, auditLogs, auditLogsLoading, refreshAuditLogs: fetchAuditLogs,
-      approveJob, rejectJob, archiveJob, updateJobStatus,
+      jobs, jobsLoading, jobsError, refreshJobs: fetchJobs,
+      categories, reports, auditLogs, auditLogsLoading, refreshAuditLogs: fetchAuditLogs,
+      approveJob, rejectJob, archiveJob,
       addCategory, toggleCategory, renameCategory,
       updateReportStatus,
       banUser, unbanUser, updateUserRole,

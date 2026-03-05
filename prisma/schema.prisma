@@ -68,14 +68,28 @@ model Category {
   updatedAt DateTime @updatedAt
 }
 
+model Location {
+  id       String  @id @default(cuid())
+  name     String  @unique
+  slug     String  @unique
+  isActive Boolean @default(true)
+
+  jobs Job[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
 model Job {
   id           String    @id @default(cuid())
   title        String
   description  String
   companyName  String
-  location     String?
   jobType      String?   // Internship, Part-time, etc.
   telegramLink String
+
+  locationId   String?
+  location     Location? @relation(fields: [locationId], references: [id])
 
   responsibilities String[]
   requirements     String[]
@@ -105,6 +119,7 @@ model Job {
   updatedAt    DateTime  @updatedAt
 
   @@index([categoryId])
+  @@index([locationId])
   @@index([status])
   @@index([createdAt])
 }

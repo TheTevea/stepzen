@@ -1,8 +1,23 @@
 import type { Metadata } from "next";
+import { Inter, Bricolage_Grotesque } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/context/AuthContext";
 import { AlertProvider } from "@/context/AlertContext";
 import { Alert } from "@/components/Alert";
+
+const inter = Inter({
+  subsets: ["latin"],
+  weight: ["400", "500", "600"],
+  variable: "--font-inter",
+  display: "swap",
+});
+
+const bricolage = Bricolage_Grotesque({
+  subsets: ["latin"],
+  weight: ["700", "800"],
+  variable: "--font-bricolage",
+  display: "swap",
+});
 
 export const metadata: Metadata = {
   title: "StepZen | Internships for Developers",
@@ -16,15 +31,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <head>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
-        <link
-          href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,700;12..96,800&family=Inter:wght@400;500;600&display=swap"
-          rel="stylesheet"
-        />
-      </head>
-      <body className="font-sans text-gray-900 antialiased">
+      <body className={`${inter.variable} ${bricolage.variable} font-sans text-gray-900 antialiased`}>
         <AuthProvider>
           <AlertProvider>
             <Alert />

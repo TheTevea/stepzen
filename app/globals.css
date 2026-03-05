@@ -1,8 +1,8 @@
 @import "tailwindcss";
 
 @theme {
-  --font-sans: "Inter", sans-serif;
-  --font-display: "Bricolage Grotesque", sans-serif;
+  --font-sans: var(--font-inter), sans-serif;
+  --font-display: var(--font-bricolage), sans-serif;
 
   --color-primary: #6366f1;
   --color-secondary: #10b981;
@@ -117,4 +117,27 @@ body {
   flex: 1;
   height: 1px;
   background: linear-gradient(to right, transparent, #e5e7eb, transparent);
+}
+
+/* Custom scrollbar */
+.custom-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: #c7c7cc transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+  width: 4px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #c7c7cc;
+  border-radius: 9999px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #6366f1;
 }

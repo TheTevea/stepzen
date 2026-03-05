@@ -3,30 +3,34 @@
 import React, { useState, use } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { ArrowLeft, CheckCircle, XCircle, Archive, ExternalLink, AlertTriangle } from 'lucide-react';
+import { ArrowLeft, CheckCircle, XCircle, Archive, ExternalLink, AlertTriangle, Loader2 } from 'lucide-react';
 import { useAdmin } from '@/context/AdminContext';
-import { useAuth } from '@/context/AuthContext';
 import { useAlert } from '@/context/AlertContext';
 import { JobStatusBadge } from '@/components/admin/StatusBadge';
 
 export default function AdminJobDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
   const router = useRouter();
-  const { user } = useAuth();
   const { showAlert } = useAlert();
-  const { jobs, categories, users, approveJob, rejectJob, archiveJob } = useAdmin();
+  const { jobs, jobsLoading, categories, users, approveJob, rejectJob, archiveJob } = useAdmin();
 
   const [rejectNote, setRejectNote] = useState('');
   const [showRejectForm, setShowRejectForm] = useState(false);
+  const [actionLoading, setActionLoading] = useState(false);
 
   const job = jobs.find(j => j.id === id);
   const category = categories.find(c => c.id === job?.categoryId);
   const postedBy = users.find(u => u.id === job?.createdById);
-  const reviewedBy = users.find(u => u.id === job?.reviewedById);
+  const reviewedBy = job?.reviewedById ? users.find(u => u.id === job.reviewedById) : null;
 
-  // Get the admin's user ID — use the admin user entry from the users list
-  const adminUser = users.find(u => u.email === user?.email);
-  const actorId = adminUser?.id ?? 'u-1';
+  if (jobsLoading) {
+    return (
+      <div className="p-6 max-w-3xl mx-auto flex flex-col items-center py-20">
+        <Loader2 size={28} className="animate-spin text-gray-400" />
+        <p className="text-gray-400 font-medium mt-3">Loading job details…</p>
+      </div>
+    );
+  }
 
   if (!job) {
     return (
@@ -37,26 +41,47 @@ export default function AdminJobDetailPage({ params }: { params: Promise<{ id: s
     );
   }
 
-  const handleApprove = () => {
-    approveJob(job.id, actorId);
-    showAlert('Job approved and published.', 'success');
-    router.push('/admin/jobs');
+  const handleApprove = async () => {
+    setActionLoading(true);
+    try {
+      await approveJob(job.id);
+      showAlert('Job approved and published.', 'success');
+      router.push('/admin/jobs');
+    } catch {
+      showAlert('Failed to approve job.', 'error');
+    } finally {
+      setActionLoading(false);
+    }
   };
 
-  const handleReject = () => {
+  const handleReject = async () => {
     if (!rejectNote.trim()) {
       showAlert('Please provide a rejection reason.', 'error');
       return;
     }
-    rejectJob(job.id, actorId, rejectNote);
-    showAlert('Job rejected.', 'info');
-    router.push('/admin/jobs');
+    setActionLoading(true);
+    try {
+      await rejectJob(job.id, rejectNote);
+      showAlert('Job rejected.', 'info');
+      router.push('/admin/jobs');
+    } catch {
+      showAlert('Failed to reject job.', 'error');
+    } finally {
+      setActionLoading(false);
+    }
   };
 
-  const handleArchive = () => {
-    archiveJob(job.id, actorId);
-    showAlert('Job archived.', 'info');
-    router.push('/admin/jobs');
+  const handleArchive = async () => {
+    setActionLoading(true);
+    try {
+      await archiveJob(job.id);
+      showAlert('Job archived.', 'info');
+      router.push('/admin/jobs');
+    } catch {
+      showAlert('Failed to archive job.', 'error');
+    } finally {
+      setActionLoading(false);
+    }
   };
 
   const canApprove = job.status === 'PENDING_REVIEW' || job.status === 'DRAFT';
@@ -93,6 +118,47 @@ export default function AdminJobDetailPage({ params }: { params: Promise<{ id: s
               <p className="text-gray-700 leading-relaxed">{job.description}</p>
             </div>
 
+            {job.responsibilities && job.responsibilities.length > 0 && (
+              <div className="mt-5 pt-4 border-t-2 border-gray-100">
+                <h3 className="font-bold text-sm uppercase tracking-wider text-gray-400 mb-2">Key Responsibilities</h3>
+                <ul className="space-y-1.5">
+                  {job.responsibilities.map((item, i) => (
+                    <li key={i} className="flex items-start gap-2 text-sm text-gray-700">
+                      <span className="mt-1.5 w-1.5 h-1.5 rounded-full bg-primary shrink-0" />
+                      {item}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            {job.requirements && job.requirements.length > 0 && (
+              <div className="mt-5 pt-4 border-t-2 border-gray-100">
+                <h3 className="font-bold text-sm uppercase tracking-wider text-gray-400 mb-2">Requirements</h3>
+                <ul className="space-y-1.5">
+                  {job.requirements.map((item, i) => (
+                    <li key={i} className="flex items-start gap-2 text-sm text-gray-700">
+                      <span className="mt-1.5 w-1.5 h-1.5 rounded-full bg-indigo-500 shrink-0" />
+                      {item}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            {job.skills && job.skills.length > 0 && (
+              <div className="mt-5 pt-4 border-t-2 border-gray-100">
+                <h3 className="font-bold text-sm uppercase tracking-wider text-gray-400 mb-2">Skills</h3>
+                <div className="flex flex-wrap gap-2">
+                  {job.skills.map((skill, i) => (
+                    <span key={i} className="px-2.5 py-1 bg-emerald-50 text-emerald-700 border border-emerald-300 rounded-full text-xs font-bold">
+                      {skill}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+
             <div className="mt-5 pt-4 border-t-2 border-gray-100">
               <h3 className="font-bold text-sm uppercase tracking-wider text-gray-400 mb-2">Telegram Contact</h3>
               <a
@@ -124,9 +190,10 @@ export default function AdminJobDetailPage({ params }: { params: Promise<{ id: s
               <div className="flex gap-3 mt-3">
                 <button
                   onClick={handleReject}
-                  className="px-4 py-2 bg-red-500 text-white border-2 border-black rounded-lg font-bold text-sm shadow-neo-sm hover:-translate-y-0.5 hover:shadow-none transition-all"
+                  disabled={actionLoading}
+                  className="px-4 py-2 bg-red-500 text-white border-2 border-black rounded-lg font-bold text-sm shadow-neo-sm hover:-translate-y-0.5 hover:shadow-none transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  Confirm Reject
+                  {actionLoading ? <Loader2 size={14} className="animate-spin" /> : 'Confirm Reject'}
                 </button>
                 <button
                   onClick={() => setShowRejectForm(false)}
@@ -148,15 +215,17 @@ export default function AdminJobDetailPage({ params }: { params: Promise<{ id: s
               {canApprove && (
                 <button
                   onClick={handleApprove}
-                  className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-green-500 text-white border-2 border-black rounded-lg font-bold text-sm shadow-neo-sm hover:-translate-y-0.5 hover:shadow-none transition-all"
+                  disabled={actionLoading}
+                  className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-green-500 text-white border-2 border-black rounded-lg font-bold text-sm shadow-neo-sm hover:-translate-y-0.5 hover:shadow-none transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  <CheckCircle size={16} /> Approve & Publish
+                  {actionLoading ? <Loader2 size={16} className="animate-spin" /> : <><CheckCircle size={16} /> Approve & Publish</>}
                 </button>
               )}
               {canReject && !showRejectForm && (
                 <button
                   onClick={() => setShowRejectForm(true)}
-                  className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-red-500 text-white border-2 border-black rounded-lg font-bold text-sm shadow-neo-sm hover:-translate-y-0.5 hover:shadow-none transition-all"
+                  disabled={actionLoading}
+                  className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-red-500 text-white border-2 border-black rounded-lg font-bold text-sm shadow-neo-sm hover:-translate-y-0.5 hover:shadow-none transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <XCircle size={16} /> Reject
                 </button>
@@ -164,9 +233,10 @@ export default function AdminJobDetailPage({ params }: { params: Promise<{ id: s
               {canArchive && (
                 <button
                   onClick={handleArchive}
-                  className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-gray-200 text-gray-800 border-2 border-black rounded-lg font-bold text-sm shadow-neo-sm hover:-translate-y-0.5 hover:shadow-none transition-all"
+                  disabled={actionLoading}
+                  className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-gray-200 text-gray-800 border-2 border-black rounded-lg font-bold text-sm shadow-neo-sm hover:-translate-y-0.5 hover:shadow-none transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  <Archive size={16} /> Archive
+                  {actionLoading ? <Loader2 size={16} className="animate-spin" /> : <><Archive size={16} /> Archive</>}
                 </button>
               )}
               {!canApprove && !canReject && !canArchive && (
@@ -194,10 +264,6 @@ export default function AdminJobDetailPage({ params }: { params: Promise<{ id: s
                   <dd className="font-bold">{new Date(job.publishedAt).toLocaleDateString()}</dd>
                 </div>
               )}
-              <div>
-                <dt className="text-xs font-bold text-gray-400 uppercase tracking-wider">Views</dt>
-                <dd className="font-bold">{job.viewCount}</dd>
-              </div>
               {job.reviewNote && (
                 <div>
                   <dt className="text-xs font-bold text-gray-400 uppercase tracking-wider">Review Note</dt>

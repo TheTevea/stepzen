@@ -71,6 +71,25 @@ export default function PostInternship() {
     })();
   }, []);
 
+  // Fetch locations from DB
+  const [locationOptions, setLocationOptions] = useState<SelectOption[]>([]);
+  useEffect(() => {
+    (async () => {
+      try {
+        const res = await fetch('/api/locations');
+        if (res.ok) {
+          const locs = await res.json();
+          setLocationOptions(locs.map((l: { id: string; name: string }) => ({
+            value: l.id,
+            label: l.name,
+          })));
+        }
+      } catch {
+        // silently fail
+      }
+    })();
+  }, []);
+
   // Fallback hardcoded categories if DB is empty
   const defaultCategoryOptions: SelectOption[] = [
     { value: 'Frontend', label: 'Frontend' },
@@ -86,7 +105,7 @@ export default function PostInternship() {
   const [form, setForm] = useState({
     title: '',
     company: '',
-    location: '',
+    locationId: '',
     type: 'Remote',
     category: '',
     summary: '',
@@ -99,12 +118,18 @@ export default function PostInternship() {
     telegramApplyLink: '',
   });
 
-  // Set default category once options load
+  // Set default category and location once options load
   useEffect(() => {
     if (activeCategoryOptions.length > 0 && !form.category) {
       setForm(prev => ({ ...prev, category: activeCategoryOptions[0].value }));
     }
   }, [activeCategoryOptions, form.category]);
+
+  useEffect(() => {
+    if (locationOptions.length > 0 && !form.locationId) {
+      setForm(prev => ({ ...prev, locationId: locationOptions[0].value }));
+    }
+  }, [locationOptions, form.locationId]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     setForm(prev => ({ ...prev, [e.target.name]: e.target.value }));
@@ -152,7 +177,7 @@ export default function PostInternship() {
           description: form.summary,
           telegramLink: form.telegramApplyLink,
           categoryId: form.category,
-          location: form.location || null,
+          locationId: form.locationId || null,
           jobType: form.type || null,
           responsibilities: responsibilitiesArr,
           requirements: requirementsArr,
@@ -279,14 +304,12 @@ export default function PostInternship() {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-              <NeoInput
+              <NeoSelect
                 label="Location *"
-                required
-                name="location"
-                value={form.location}
-                onChange={handleChange}
-                type="text"
-                placeholder="e.g. San Francisco, CA"
+                options={locationOptions}
+                value={form.locationId}
+                onChange={handleSelectChange('locationId')}
+                placeholder="Select location"
               />
               <NeoSelect
                 label="Work Type *"

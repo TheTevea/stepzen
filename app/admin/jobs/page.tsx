@@ -3,7 +3,7 @@
 import React, { useState, useMemo } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
-import { Search, ArrowRight, Filter } from 'lucide-react';
+import { Search, ArrowRight, Filter, Loader2 } from 'lucide-react';
 import { useAdmin } from '@/context/AdminContext';
 import { JobStatusBadge } from '@/components/admin/StatusBadge';
 import { JobStatus } from '@/types';
@@ -18,7 +18,7 @@ const STATUS_OPTIONS: { value: string; label: string }[] = [
 ];
 
 export default function AdminJobsPage() {
-  const { jobs, categories } = useAdmin();
+  const { jobs, jobsLoading, jobsError, categories } = useAdmin();
   const searchParams = useSearchParams();
   const initialStatus = searchParams.get('status') || '';
 
@@ -91,6 +91,13 @@ export default function AdminJobsPage() {
         <span className="ml-auto text-sm font-bold text-gray-500">{filtered.length} result{filtered.length !== 1 ? 's' : ''}</span>
       </div>
 
+      {/* Error */}
+      {jobsError && (
+        <div className="bg-red-50 border-2 border-red-400 rounded-xl p-4 mb-6 text-red-700 font-bold text-sm">
+          Failed to load jobs: {jobsError}
+        </div>
+      )}
+
       {/* Jobs table */}
       <div className="bg-white border-2 border-black rounded-xl shadow-neo overflow-hidden">
         <div className="overflow-x-auto">
@@ -106,33 +113,41 @@ export default function AdminJobsPage() {
               </tr>
             </thead>
             <tbody className="divide-y-2 divide-gray-100">
-              {filtered.map(job => (
-                <tr key={job.id} className="hover:bg-gray-50 transition-colors">
-                  <td className="px-4 py-3 font-bold max-w-[200px] truncate">{job.title}</td>
-                  <td className="px-4 py-3 text-gray-600">{job.companyName}</td>
-                  <td className="px-4 py-3 text-gray-600">{categoryMap[job.categoryId] ?? '—'}</td>
-                  <td className="px-4 py-3">
-                    <JobStatusBadge status={job.status as JobStatus} />
-                  </td>
-                  <td className="px-4 py-3 text-gray-500 whitespace-nowrap">
-                    {new Date(job.createdAt).toLocaleDateString()}
-                  </td>
-                  <td className="px-4 py-3">
-                    <Link
-                      href={`/admin/jobs/${job.id}`}
-                      className="inline-flex items-center gap-1 px-3 py-1.5 bg-primary text-white rounded-lg border-2 border-black text-xs font-bold shadow-neo-sm hover:-translate-y-0.5 hover:shadow-none transition-all"
-                    >
-                      Review <ArrowRight size={12} />
-                    </Link>
+              {jobsLoading ? (
+                <tr>
+                  <td colSpan={6} className="px-4 py-10 text-center">
+                    <Loader2 size={24} className="animate-spin text-gray-400 mx-auto" />
+                    <p className="text-gray-400 font-medium mt-2">Loading jobs…</p>
                   </td>
                 </tr>
-              ))}
-              {filtered.length === 0 && (
+              ) : filtered.length === 0 ? (
                 <tr>
                   <td colSpan={6} className="px-4 py-10 text-center text-gray-400 font-medium">
                     No jobs found.
                   </td>
                 </tr>
+              ) : (
+                filtered.map(job => (
+                  <tr key={job.id} className="hover:bg-gray-50 transition-colors">
+                    <td className="px-4 py-3 font-bold max-w-[200px] truncate">{job.title}</td>
+                    <td className="px-4 py-3 text-gray-600">{job.companyName}</td>
+                    <td className="px-4 py-3 text-gray-600">{categoryMap[job.categoryId] ?? '—'}</td>
+                    <td className="px-4 py-3">
+                      <JobStatusBadge status={job.status as JobStatus} />
+                    </td>
+                    <td className="px-4 py-3 text-gray-500 whitespace-nowrap">
+                      {new Date(job.createdAt).toLocaleDateString()}
+                    </td>
+                    <td className="px-4 py-3">
+                      <Link
+                        href={`/admin/jobs/${job.id}`}
+                        className="inline-flex items-center gap-1 px-3 py-1.5 bg-primary text-white rounded-lg border-2 border-black text-xs font-bold shadow-neo-sm hover:-translate-y-0.5 hover:shadow-none transition-all"
+                      >
+                        Review <ArrowRight size={12} />
+                      </Link>
+                    </td>
+                  </tr>
+                ))
               )}
             </tbody>
           </table>

@@ -59,7 +59,7 @@ export async function POST(request: Request) {
       description,
       telegramLink,
       categoryId,
-      location,
+      locationId,
       jobType,
       responsibilities,
       requirements,
@@ -83,7 +83,7 @@ export async function POST(request: Request) {
         companyName,
         description,
         telegramLink,
-        location: location || null,
+        locationId: locationId || null,
         jobType: jobType || null,
         categoryId,
         createdById: user.id,
@@ -95,7 +95,7 @@ export async function POST(request: Request) {
         stipend: stipend || null,
         deadline: deadline || null,
       },
-      include: { category: true },
+      include: { category: true, location: true },
     });
 
     return NextResponse.json(
@@ -114,7 +114,7 @@ export async function GET() {
   try {
     const jobs = await prisma.job.findMany({
       where: { status: 'PUBLISHED' },
-      include: { category: true },
+      include: { category: true, location: true },
       orderBy: { createdAt: 'desc' },
     });
 

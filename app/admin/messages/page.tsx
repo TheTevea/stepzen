@@ -18,6 +18,7 @@ import {
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { useAlert } from '@/context/AlertContext';
+import { NeoConfirmDialog } from '@/components/NeoConfirmDialog';
 
 interface ContactMessage {
   id: string;
@@ -323,35 +324,17 @@ export default function AdminMessagesPage() {
         </div>
       )}
 
-      {/* Delete confirmation modal */}
-      {deleteModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-          <div className="bg-white border-2 border-black rounded-xl p-6 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] max-w-sm w-full">
-            <h3 className="font-display font-bold text-lg mb-2 flex items-center gap-2">
-              <Trash2 size={20} className="text-red-500" />
-              Delete message?
-            </h3>
-            <p className="text-sm text-gray-600 mb-4">
-              Are you sure you want to delete the message from <strong>{deleteModal.name}</strong>? This action cannot be undone.
-            </p>
-            <div className="flex gap-3">
-              <button
-                onClick={handleDelete}
-                disabled={deleteLoading === deleteModal.id}
-                className="flex-1 py-2 bg-red-500 text-white border-2 border-black rounded-lg font-bold text-sm shadow-neo-sm hover:-translate-y-0.5 hover:shadow-none transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {deleteLoading === deleteModal.id ? 'Deleting...' : 'Confirm Delete'}
-              </button>
-              <button
-                onClick={() => setDeleteModal(null)}
-                className="flex-1 py-2 bg-white border-2 border-black rounded-lg font-bold text-sm hover:bg-gray-50 transition-colors"
-              >
-                Cancel
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <NeoConfirmDialog
+        open={!!deleteModal}
+        title="Delete message?"
+        message={`Are you sure you want to delete the message from "${deleteModal?.name}"? This action cannot be undone.`}
+        confirmLabel={deleteLoading === deleteModal?.id ? 'Deleting...' : 'Delete'}
+        variant="danger"
+        loading={deleteLoading === deleteModal?.id}
+        icon={<Trash2 size={20} className="text-red-500" />}
+        onConfirm={handleDelete}
+        onCancel={() => setDeleteModal(null)}
+      />
 
       {/* Reply modal */}
       {replyModal && (

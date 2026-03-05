@@ -70,6 +70,12 @@ export interface AdminJob {
   location?: string;
   jobType?: string;
   telegramLink: string;
+  responsibilities?: string[];
+  requirements?: string[];
+  skills?: string[];
+  duration?: string;
+  stipend?: string;
+  deadline?: string;
   categoryId: string;
   createdById: string;
   status: JobStatus;

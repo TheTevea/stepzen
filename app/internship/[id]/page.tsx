@@ -37,7 +37,7 @@ export default function InternshipDetail() {
               id: j.id,
               title: j.title,
               company: j.companyName,
-              location: j.location || 'Remote',
+              location: j.location?.name || 'Remote',
               type: j.jobType || 'Remote',
               category: j.category?.name || 'Fullstack',
               postedDate: j.createdAt?.split('T')[0] || '',
