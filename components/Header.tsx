@@ -125,22 +125,26 @@ export const Header: React.FC = () => {
                         <User size={20} />
                         Hi, {user.name}
                      </div>
+                     <div className="flex gap-2">
                      {user.role === 'ADMIN' ? (
-                       <Link href="/admin" onClick={() => setIsMenuOpen(false)}>
+                       <Link href="/admin" onClick={() => setIsMenuOpen(false)} className="w-1/2">
                          <Button variant="secondary" size="sm" fullWidth className="gap-1.5">
-                           <LayoutDashboard size={16} /> Admin Dashboard
+                           <LayoutDashboard size={16} /> Admin
                          </Button>
                        </Link>
                      ) : (
-                       <Link href="/post" onClick={() => setIsMenuOpen(false)}>
+                       <Link href="/post" onClick={() => setIsMenuOpen(false)} className="w-1/2">
                          <Button variant="secondary" size="sm" fullWidth className="gap-1.5">
-                           <Plus size={16} /> Post Internship
+                           <Plus size={16} /> Post
                          </Button>
                        </Link>
                      )}
-                     <Button variant="outline" size="sm" fullWidth onClick={handleLogout}>
-                      Logout
-                    </Button>
+                     <div className="w-1/2">
+                       <Button variant="outline" size="sm" fullWidth onClick={handleLogout}>
+                         Logout
+                       </Button>
+                     </div>
+                     </div>
                   </div>
                 ) : (
                   <Link href="/login" onClick={() => setIsMenuOpen(false)}>
