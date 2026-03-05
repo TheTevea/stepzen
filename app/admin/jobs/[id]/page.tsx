@@ -170,6 +170,26 @@ export default function AdminJobDetailPage({ params }: { params: Promise<{ id: s
                 <ExternalLink size={14} />
                 {job.telegramLink}
               </a>
+
+              <div className="mt-4 flex items-center gap-2">
+                <span className="text-sm font-bold text-gray-700">Share to StepZen Channel:</span>
+                {job.postToTelegram ? (
+                  <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-green-50 text-green-700 border border-green-300 rounded-full text-xs font-bold">
+                    <CheckCircle size={12} /> Yes
+                  </span>
+                ) : (
+                  <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-gray-50 text-gray-700 border border-gray-300 rounded-full text-xs font-bold">
+                    <XCircle size={12} /> No
+                  </span>
+                )}
+              </div>
+              
+              {job.telegramBannerUrl && (
+                <div className="mt-4">
+                  <span className="text-sm font-bold text-gray-700 block mb-2">Telegram Banner:</span>
+                  <img src={job.telegramBannerUrl} alt="Telegram Banner" className="max-w-xs rounded border border-gray-200" />
+                </div>
+              )}
             </div>
           </div>
 

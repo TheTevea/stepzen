@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { Terminal, Coffee, CheckCircle, ExternalLink } from 'lucide-react';
+import { Terminal, Coffee, CheckCircle, ExternalLink, Send } from 'lucide-react';
 import { Button } from '../components/Button';
 import { JobCard } from '../components/JobCard';
 import { INTERNSHIPS } from '../constants';
@@ -188,10 +188,9 @@ export default function Home() {
                   <p className="text-gray-600 mb-8 max-w-lg text-lg">
                     Internships fill up fast. Join 5,000+ developers getting instant alerts on our Telegram channel.
                   </p>
-                  <a href="https://t.me/+xYrIev4OEHk2MTY1" target="_blank" rel="noreferrer">
-                    <Button size="lg">
-                      🚀 Join Telegram Channel
-                    </Button>
+                  <a href="https://t.me/+xYrIev4OEHk2MTY1" target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 bg-[#229ED9] text-white px-6 py-3 rounded-full font-bold text-lg border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:translate-y-[1px] hover:shadow-none transition-all">
+                    <Send size={20} />
+                    Join Telegram Channel
                   </a>
                 </div>
 

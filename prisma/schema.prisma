@@ -87,6 +87,8 @@ model Job {
   companyName  String
   jobType      String?   // Internship, Part-time, etc.
   telegramLink String
+  postToTelegram Boolean   @default(true)
+  telegramBannerUrl String?
 
   locationId   String?
   location     Location? @relation(fields: [locationId], references: [id])

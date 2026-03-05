@@ -90,17 +90,9 @@ export default function PostInternship() {
     })();
   }, []);
 
-  // Fallback hardcoded categories if DB is empty
-  const defaultCategoryOptions: SelectOption[] = [
-    { value: 'Frontend', label: 'Frontend' },
-    { value: 'Backend', label: 'Backend' },
-    { value: 'Fullstack', label: 'Fullstack' },
-    { value: 'Design', label: 'Design' },
-    { value: 'Mobile', label: 'Mobile' },
-    { value: 'Data', label: 'Data' },
-  ];
+  const activeCategoryOptions = categoryOptions;
 
-  const activeCategoryOptions = categoryOptions.length > 0 ? categoryOptions : defaultCategoryOptions;
+  const [bannerFile, setBannerFile] = useState<File | null>(null);
 
   const [form, setForm] = useState({
     title: '',
@@ -116,6 +108,7 @@ export default function PostInternship() {
     stipend: '',
     deadline: '',
     telegramApplyLink: '',
+    postToTelegram: true,
   });
 
   // Set default category and location once options load
@@ -132,11 +125,23 @@ export default function PostInternship() {
   }, [locationOptions, form.locationId]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    setForm(prev => ({ ...prev, [e.target.name]: e.target.value }));
+    const { name, value, type } = e.target;
+    if (type === 'checkbox') {
+      const checked = (e.target as HTMLInputElement).checked;
+      setForm(prev => ({ ...prev, [name]: checked }));
+    } else {
+      setForm(prev => ({ ...prev, [name]: value }));
+    }
   };
 
   const handleSelectChange = (name: string) => (value: string) => {
     setForm(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files.length > 0) {
+      setBannerFile(e.target.files[0]);
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -165,6 +170,18 @@ export default function PostInternship() {
         .map((s: string) => s.trim())
         .filter(Boolean);
 
+      let telegramBannerUrl: string | null = null;
+
+      if (form.postToTelegram && bannerFile) {
+        // Convert file to base64 data URI
+        telegramBannerUrl = await new Promise<string>((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(reader.result as string);
+          reader.onerror = () => reject(new Error('Failed to read banner file.'));
+          reader.readAsDataURL(bannerFile);
+        });
+      }
+
       const res = await fetch('/api/jobs', {
         method: 'POST',
         headers: {
@@ -179,6 +196,8 @@ export default function PostInternship() {
           categoryId: form.category,
           locationId: form.locationId || null,
           jobType: form.type || null,
+          postToTelegram: form.postToTelegram,
+          telegramBannerUrl,
           responsibilities: responsibilitiesArr,
           requirements: requirementsArr,
           skills: skillsArr,
@@ -426,6 +445,46 @@ export default function PostInternship() {
               type="url"
               placeholder="https://t.me/..."
             />
+
+            <label className="flex items-center gap-3 cursor-pointer mt-4 p-4 border-2 border-black rounded-lg bg-emerald-50 hover:bg-emerald-100 transition-colors">
+              <div className="relative flex items-center">
+                <input
+                  type="checkbox"
+                  name="postToTelegram"
+                  checked={form.postToTelegram}
+                  onChange={handleChange}
+                  className="sr-only peer"
+                />
+                <div className="w-11 h-6 bg-gray-200 border-2 border-black rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-black after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-2 after:border-black after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+              </div>
+              <div>
+                <span className="font-bold text-sm block">Share to StepZen Telegram Channel</span>
+                <span className="text-xs text-gray-600 block">We'll automatically cross-post this internship to our 5,000+ member Telegram channel.</span>
+              </div>
+            </label>
+
+            {form.postToTelegram && (
+              <div className="mt-4 p-4 border-2 border-black rounded-lg bg-gray-50 flex flex-col gap-2 animate-in fade-in slide-in-from-top-2 duration-300">
+                <label className="font-bold text-sm block">Banner Image (Optional)</label>
+                <span className="text-xs text-gray-500 block mb-2">Upload a banner image to be featured in the Telegram post. Recommended size: 1200x630px.</span>
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleFileChange}
+                  className="block w-full text-sm text-gray-500
+                    file:mr-4 file:py-2 file:px-4
+                    file:rounded-full file:border-2 file:border-black
+                    file:text-sm file:font-bold
+                    file:bg-primary file:text-white
+                    hover:file:bg-primary/90 hover:file:cursor-pointer transition-colors"
+                />
+                {bannerFile && (
+                  <span className="text-xs font-bold text-green-600 mt-1 flex items-center gap-1">
+                    Selected: {bannerFile.name}
+                  </span>
+                )}
+              </div>
+            )}
           </div>
 
           {/* Submit */}

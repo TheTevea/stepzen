@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { supabase } from '@/lib/supabase';
+import { getSupabaseAdmin } from '@/lib/supabase-admin';
+import { sendJobToTelegram } from '@/lib/telegram';
 
 /** Verify the request is from an authenticated ADMIN user */
 async function getAdminUser(request: Request) {
@@ -108,6 +110,39 @@ export async function PATCH(
         metadata: note ? { reason: note } : undefined,
       },
     });
+
+    // ── Send to Telegram channel on approval ──────────────────────────
+    if (action === 'approve' && job.postToTelegram) {
+      try {
+        await sendJobToTelegram(job);
+
+        // Clear temporary banner from Supabase and the database
+        if (job.telegramBannerUrl) {
+          // Extract the filename from the end of the public URL
+          const parts = job.telegramBannerUrl.split('/');
+          const fileName = parts[parts.length - 1];
+          
+          if (fileName) {
+            const admin = getSupabaseAdmin();
+            const { error: deleteError } = await admin.storage
+              .from('telegram-banners')
+              .remove([fileName]);
+              
+            if (deleteError) {
+              console.error('[Storage] Failed to delete banner:', deleteError);
+            }
+          }
+
+          await prisma.job.update({
+            where: { id },
+            data: { telegramBannerUrl: null },
+          });
+        }
+      } catch (telegramErr) {
+        console.error('[Telegram] Failed to send job to channel:', telegramErr);
+        // Don't fail the approval — just log the error
+      }
+    }
 
     return NextResponse.json({ job });
   } catch (err) {

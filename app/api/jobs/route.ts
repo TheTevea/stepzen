@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { supabase } from '@/lib/supabase';
+import { getSupabaseAdmin } from '@/lib/supabase-admin';
 
 const DAILY_POST_LIMIT = 3;
 
@@ -58,6 +59,8 @@ export async function POST(request: Request) {
       companyName,
       description,
       telegramLink,
+      postToTelegram,
+      telegramBannerUrl,
       categoryId,
       locationId,
       jobType,
@@ -76,6 +79,51 @@ export async function POST(request: Request) {
       );
     }
 
+    // ── Verify the category exists ────────────────────────────────────
+    const categoryExists = await prisma.category.findUnique({
+      where: { id: categoryId },
+    });
+    if (!categoryExists) {
+      return NextResponse.json(
+        { error: 'Invalid category selected. Please refresh the page and try again.' },
+        { status: 400 }
+      );
+    }
+
+    // ── Upload banner to Supabase Storage (if provided) ────────────────
+    let storedBannerUrl: string | null = null;
+    if (telegramBannerUrl && (postToTelegram ?? true)) {
+      try {
+        const matches = telegramBannerUrl.match(/^data:(.+);base64,(.+)$/);
+        if (matches) {
+          const mimeType = matches[1];
+          const base64Data = matches[2];
+          const buffer = Buffer.from(base64Data, 'base64');
+          const ext = mimeType.split('/')[1] || 'jpg';
+          const fileName = `banner-${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
+
+          const admin = getSupabaseAdmin();
+          const { error: uploadError } = await admin.storage
+            .from('telegram-banners')
+            .upload(fileName, buffer, {
+              contentType: mimeType,
+              upsert: false,
+            });
+
+          if (uploadError) {
+            console.error('[Storage] Banner upload failed:', uploadError);
+          } else {
+            const { data: urlData } = admin.storage
+              .from('telegram-banners')
+              .getPublicUrl(fileName);
+            storedBannerUrl = urlData.publicUrl;
+          }
+        }
+      } catch (storageErr) {
+        console.error('[Storage] Banner upload error:', storageErr);
+      }
+    }
+
     // ── Create the Job ────────────────────────────────────────────────
     const job = await prisma.job.create({
       data: {
@@ -83,6 +131,8 @@ export async function POST(request: Request) {
         companyName,
         description,
         telegramLink,
+        postToTelegram: postToTelegram ?? true,
+        telegramBannerUrl: storedBannerUrl,
         locationId: locationId || null,
         jobType: jobType || null,
         categoryId,

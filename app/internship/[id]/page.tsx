@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
-import { ArrowLeft, Share2, Copy, CheckCircle, Clock, DollarSign, Flag, X, Loader2 } from 'lucide-react';
+import { ArrowLeft, Share2, Copy, CheckCircle, Clock, DollarSign, Flag, X, Loader2, Send } from 'lucide-react';
 import { Badge } from '@/components/Badge';
 import { Button } from '@/components/Button';
 import { PageTemplate } from '@/components/PageTemplate';
@@ -337,8 +337,9 @@ export default function InternshipDetail() {
                    </div>
 
                    <div className="space-y-3">
-                      <a href={job.telegramApplyLink} target="_blank" rel="noreferrer" className="block">
-                        <Button fullWidth size="md">Apply via Telegram</Button>
+                      <a href={job.telegramApplyLink} target="_blank" rel="noreferrer" className="flex items-center justify-center gap-2 w-full bg-[#229ED9] text-white px-4 py-3 rounded-full font-bold text-sm border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:translate-y-[1px] hover:shadow-none transition-all">
+                        <Send size={18} />
+                        Apply via Telegram
                       </a>
                    </div>
 

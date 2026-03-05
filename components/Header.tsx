@@ -38,11 +38,11 @@ export const Header: React.FC = () => {
       <div className="max-w-7xl mx-auto px-4 ">
         <div className="flex justify-between items-center h-16 md:h-20">
           {/* Logo */}
-          <Link href="/" className="relative flex items-center gap-2 group  self-stretch">
-        
-            <img src="/assets/images/icon_stepzen.png" alt="Stepzen Logo" className="h-14 block md:hidden" />
-            <img src="/assets/images/logo_stepzen.png" alt="Stepzen Logo" className="h-14 hidden md:block" />
-       
+          <Link href="/" className="relative flex items-center gap-1 group self-stretch">
+            <img src="/assets/images/icon_stepzen.png" alt="Stepzen Logo" className="h-14" />
+            <span className="text-4xl font-black tracking-tight text-gray-900">
+              Step<span className="text-primary">Z</span>en
+            </span>
           </Link>
 
           {/* Desktop Nav */}

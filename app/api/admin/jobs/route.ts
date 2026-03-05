@@ -45,6 +45,8 @@ export async function GET(request: Request) {
       location: j.location?.name ?? null,
       jobType: j.jobType,
       telegramLink: j.telegramLink,
+      postToTelegram: j.postToTelegram,
+      telegramBannerUrl: j.telegramBannerUrl ?? undefined,
       responsibilities: j.responsibilities,
       requirements: j.requirements,
       skills: j.skills,

@@ -70,6 +70,8 @@ export interface AdminJob {
   location?: string;
   jobType?: string;
   telegramLink: string;
+  postToTelegram: boolean;
+  telegramBannerUrl?: string;
   responsibilities?: string[];
   requirements?: string[];
   skills?: string[];
