@@ -68,11 +68,107 @@ export default function InternshipDetail() {
   }, [id]);
 
   if (loading) {
+    const shimmer = 'animate-pulse bg-gray-200 rounded';
     return (
       <PageTemplate>
-        <div className="min-h-screen flex flex-col items-center justify-center p-4">
-          <Loader2 size={32} className="animate-spin text-primary mb-3" />
-          <p className="text-gray-500 font-medium">Loading internship details…</p>
+        <div className="max-w-6xl mx-auto px-4 py-12">
+          {/* Breadcrumb skeleton */}
+          <div className="mb-8">
+            <div className={`${shimmer} h-4 w-40`} />
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            {/* Main Content */}
+            <div className="lg:col-span-2 space-y-8">
+              {/* Header card skeleton */}
+              <div className="bg-white border-2 border-black rounded-xl p-8 shadow-neo">
+                <div className="flex items-start justify-between mb-4">
+                  <div className="flex-1">
+                    <div className={`${shimmer} h-8 w-3/4 mb-3`} />
+                    <div className={`${shimmer} h-5 w-1/3`} />
+                  </div>
+                  <div className={`${shimmer} w-16 h-16 rounded-xl border-2 border-black shrink-0 ml-4`} />
+                </div>
+                <div className="flex flex-wrap gap-3 mt-4">
+                  <div className={`${shimmer} h-7 w-20 rounded-full`} />
+                  <div className={`${shimmer} h-7 w-24 rounded-full`} />
+                  <div className={`${shimmer} h-7 w-32 rounded-full`} />
+                </div>
+              </div>
+
+              {/* Details card skeleton */}
+              <div className="bg-white border-2 border-black rounded-xl p-8 shadow-neo space-y-8">
+                {/* Overview */}
+                <div>
+                  <div className="flex items-center gap-2 mb-3">
+                    <div className="w-2 h-2 bg-gray-300 rounded-full" />
+                    <div className={`${shimmer} h-5 w-24`} />
+                  </div>
+                  <div className="space-y-2">
+                    <div className={`${shimmer} h-4 w-full`} />
+                    <div className={`${shimmer} h-4 w-full`} />
+                    <div className={`${shimmer} h-4 w-2/3`} />
+                  </div>
+                </div>
+                {/* Responsibilities */}
+                <div>
+                  <div className="flex items-center gap-2 mb-3">
+                    <div className="w-2 h-2 bg-gray-300 rounded-full" />
+                    <div className={`${shimmer} h-5 w-44`} />
+                  </div>
+                  <div className="space-y-2 pl-5">
+                    {[...Array(4)].map((_, i) => <div key={i} className={`${shimmer} h-4`} style={{ width: `${75 - i * 8}%` }} />)}
+                  </div>
+                </div>
+                {/* Requirements */}
+                <div>
+                  <div className="flex items-center gap-2 mb-3">
+                    <div className="w-2 h-2 bg-gray-300 rounded-full" />
+                    <div className={`${shimmer} h-5 w-36`} />
+                  </div>
+                  <div className="space-y-2 pl-5">
+                    {[...Array(3)].map((_, i) => <div key={i} className={`${shimmer} h-4`} style={{ width: `${80 - i * 12}%` }} />)}
+                  </div>
+                </div>
+                {/* Skills */}
+                <div>
+                  <div className="flex items-center gap-2 mb-3">
+                    <div className="w-2 h-2 bg-gray-300 rounded-full" />
+                    <div className={`${shimmer} h-5 w-16`} />
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    {[...Array(5)].map((_, i) => <div key={i} className={`${shimmer} h-8 rounded-md`} style={{ width: `${60 + i * 12}px` }} />)}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Sidebar skeleton */}
+            <div className="lg:col-span-1">
+              <div className="sticky top-24">
+                <div className="bg-white border-2 border-black rounded-xl p-6 shadow-neo">
+                  <div className={`${shimmer} h-6 w-28 mx-auto mb-6`} />
+                  <div className="grid grid-cols-2 gap-4 mb-6">
+                    <div className="flex flex-col items-center p-3 bg-gray-50 rounded-lg">
+                      <div className={`${shimmer} h-3 w-14 mb-2`} />
+                      <div className={`${shimmer} h-4 w-16`} />
+                    </div>
+                    <div className="flex flex-col items-center p-3 bg-gray-50 rounded-lg">
+                      <div className={`${shimmer} h-3 w-14 mb-2`} />
+                      <div className={`${shimmer} h-4 w-16`} />
+                    </div>
+                  </div>
+                  <div className={`${shimmer} h-10 w-full rounded-full`} />
+                  <div className="flex items-center justify-center gap-4 mt-6 pt-6 border-t border-gray-100">
+                    <div className={`${shimmer} h-5 w-5 rounded`} />
+                    <div className={`${shimmer} h-5 w-5 rounded`} />
+                    <span className="w-px h-5 bg-gray-200" />
+                    <div className={`${shimmer} h-5 w-16 rounded`} />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </PageTemplate>
     );
