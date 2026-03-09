@@ -38,10 +38,15 @@ export const Header: React.FC = () => {
       <div className="max-w-7xl mx-auto px-4 ">
         <div className="flex justify-between items-center h-16 md:h-20">
           {/* Logo */}
-          <Link href="/" className="relative flex items-center group self-stretch">
+          <Link href="/" className="relative flex items-center gap-1.5 group self-stretch">
             <img src="/assets/images/icon_stepzen.png" alt="Stepzen Logo" className="h-8 md:h-14" />
-            <span className="text-2xl md:text-4xl font-black tracking-tight text-gray-900">
-              Step<span className="text-primary">Z</span>en
+            <span className="font-display text-2xl md:text-4xl font-black tracking-tight text-gray-900 flex items-baseline">
+              Step
+              <span className="relative inline-flex items-center justify-center bg-primary text-white px-1 md:px-1.5 rounded-md mx-0.5 text-2xl md:text-4xl leading-none shadow-neo-sm border-2 border-black group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform">
+                Z
+              </span>
+              en
+              <span className="w-1.5 h-1.5 md:w-2 md:h-2 bg-accent rounded-full ml-0.5 mb-auto mt-1 md:mt-1.5" />
             </span>
           </Link>
 
