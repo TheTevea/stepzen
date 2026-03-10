@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Menu, X, LogOut, User, Plus } from 'lucide-react';
+import { Menu, X, LogOut, User, Plus, LayoutDashboard } from 'lucide-react';
 import { Button } from './Button';
 import { useAuth } from '../context/AuthContext';
 import { useAlert } from '../context/AlertContext';
@@ -38,10 +38,16 @@ export const Header: React.FC = () => {
       <div className="max-w-7xl mx-auto px-4 ">
         <div className="flex justify-between items-center h-16 md:h-20">
           {/* Logo */}
-          <Link href="/" className="relative flex items-center gap-2 group  self-stretch">
-        
-            <img src="/assets/images/logo_stepzen.png" alt="Stepzen Logo" className="h-14" />
-       
+          <Link href="/" className="relative flex items-center gap-1.5 group self-stretch">
+            <img src="/assets/images/icon_stepzen.png" alt="Stepzen Logo" className="h-8 md:h-14" />
+            <span className="font-display text-2xl md:text-4xl font-black tracking-tight text-gray-900 flex items-baseline">
+              Step
+              <span className="relative inline-flex items-center justify-center bg-primary text-white px-1 md:px-1.5 rounded-md mx-0.5 text-2xl md:text-4xl leading-none shadow-neo-sm border-2 border-black group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform">
+                Z
+              </span>
+              en
+              <span className="w-1.5 h-1.5 md:w-2 md:h-2 bg-accent rounded-full ml-0.5 mb-auto mt-1 md:mt-1.5" />
+            </span>
           </Link>
 
           {/* Desktop Nav */}
@@ -60,11 +66,19 @@ export const Header: React.FC = () => {
             
             {user ? (
               <div className="flex items-center gap-3 ml-4">
-                 <Link href="/post">
-                   <Button variant="secondary" size="sm" className="gap-1.5">
-                     <Plus size={16} /> Post Internship
-                   </Button>
-                 </Link>
+                 {user.role === 'ADMIN' ? (
+                   <Link href="/admin">
+                     <Button variant="secondary" size="sm" className="gap-1.5">
+                       <LayoutDashboard size={16} /> Admin Dashboard
+                     </Button>
+                   </Link>
+                 ) : (
+                   <Link href="/post">
+                     <Button variant="secondary" size="sm" className="gap-1.5">
+                       <Plus size={16} /> Post Internship
+                     </Button>
+                   </Link>
+                 )}
                  <div className="flex items-center gap-2 font-bold text-sm bg-gray-100 px-3 py-1.5 rounded-full border border-gray-200">
                     <User size={16} />
                     <span>{user.name}</span>
@@ -116,14 +130,26 @@ export const Header: React.FC = () => {
                         <User size={20} />
                         Hi, {user.name}
                      </div>
-                     <Link href="/post" onClick={() => setIsMenuOpen(false)}>
-                       <Button variant="secondary" size="sm" fullWidth className="gap-1.5">
-                         <Plus size={16} /> Post Internship
+                     <div className="flex gap-2">
+                     {user.role === 'ADMIN' ? (
+                       <Link href="/admin" onClick={() => setIsMenuOpen(false)} className="w-1/2">
+                         <Button variant="secondary" size="sm" fullWidth className="gap-1.5">
+                           <LayoutDashboard size={16} /> Admin
+                         </Button>
+                       </Link>
+                     ) : (
+                       <Link href="/post" onClick={() => setIsMenuOpen(false)} className="w-1/2">
+                         <Button variant="secondary" size="sm" fullWidth className="gap-1.5">
+                           <Plus size={16} /> Post
+                         </Button>
+                       </Link>
+                     )}
+                     <div className="w-1/2">
+                       <Button variant="outline" size="sm" fullWidth onClick={handleLogout}>
+                         Logout
                        </Button>
-                     </Link>
-                     <Button variant="outline" size="sm" fullWidth onClick={handleLogout}>
-                      Logout
-                    </Button>
+                     </div>
+                     </div>
                   </div>
                 ) : (
                   <Link href="/login" onClick={() => setIsMenuOpen(false)}>

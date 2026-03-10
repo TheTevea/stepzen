@@ -3,8 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
-import { ArrowLeft, Share2, Copy, CheckCircle, Clock, DollarSign, Flag, X } from 'lucide-react';
-import { INTERNSHIPS } from '@/constants';
+import { ArrowLeft, Share2, Copy, CheckCircle, Clock, DollarSign, Flag, X, Loader2, Send } from 'lucide-react';
 import { Badge } from '@/components/Badge';
 import { Button } from '@/components/Button';
 import { PageTemplate } from '@/components/PageTemplate';
@@ -16,27 +15,164 @@ export const dynamic = 'force-dynamic';
 export default function InternshipDetail() {
   const params = useParams();
   const id = params?.id as string;
-  const [showApplyForm, setShowApplyForm] = useState(false);
-  const [formStatus, setFormStatus] = useState<'idle' | 'success'>('idle');
   const [showReportModal, setShowReportModal] = useState(false);
   const [reportReason, setReportReason] = useState('');
   const [reportDetails, setReportDetails] = useState('');
+  const [reportLoading, setReportLoading] = useState(false);
   const { showAlert } = useAlert();
 
-  // Look up job from static list or user-posted listings
-  const [job, setJob] = useState(() => INTERNSHIPS.find(i => i.id === id) || null);
+  const [job, setJob] = useState<{
+    id: string; title: string; company: string; location: string;
+    type: string; category: string; postedDate: string; deadline: string;
+    summary: string; responsibilities: string[]; requirements: string[];
+    skills: string[]; duration?: string; stipend?: string; telegramApplyLink: string;
+  } | null>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!job) {
-      const userPosts = JSON.parse(localStorage.getItem('stepzen_user_posts') || '[]');
-      const found = userPosts.find((p: { id: string }) => p.id === id);
-      if (found) setJob(found);
-    }
-  }, [id, job]);
+    if (!id) return;
+    (async () => {
+      setLoading(true);
+      try {
+        const res = await fetch(`/api/jobs/${id}`);
+        if (res.ok) {
+          const j = await res.json();
+          setJob({
+            id: j.id,
+            title: j.title,
+            company: j.companyName,
+            location: j.location?.name || 'Remote',
+            type: j.jobType || 'Remote',
+            category: j.category?.name || 'Fullstack',
+            postedDate: j.createdAt?.split('T')[0] || '',
+            deadline: j.deadline || j.expiresAt?.split('T')[0] || '',
+            summary: j.description || '',
+            responsibilities: Array.isArray(j.responsibilities) ? j.responsibilities : [],
+            requirements: Array.isArray(j.requirements) ? j.requirements : [],
+            skills: Array.isArray(j.skills) ? j.skills : [],
+            duration: j.duration || undefined,
+            stipend: j.stipend || undefined,
+            telegramApplyLink: j.telegramLink,
+          });
+        }
+      } catch {
+        // keep null – will show "not found"
+      } finally {
+        setLoading(false);
+      }
+    })();
+  }, [id]);
 
   useEffect(() => {
     window.scrollTo(0, 0);
   }, [id]);
+
+  if (loading) {
+    const shimmer = 'animate-pulse bg-gray-200 rounded';
+    return (
+      <PageTemplate>
+        <div className="max-w-6xl mx-auto px-4 py-12">
+          {/* Breadcrumb skeleton */}
+          <div className="mb-8">
+            <div className={`${shimmer} h-4 w-40`} />
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            {/* Main Content */}
+            <div className="lg:col-span-2 space-y-8">
+              {/* Header card skeleton */}
+              <div className="bg-white border-2 border-black rounded-xl p-8 shadow-neo">
+                <div className="flex items-start justify-between mb-4">
+                  <div className="flex-1">
+                    <div className={`${shimmer} h-8 w-3/4 mb-3`} />
+                    <div className={`${shimmer} h-5 w-1/3`} />
+                  </div>
+                  <div className={`${shimmer} w-16 h-16 rounded-xl border-2 border-black shrink-0 ml-4`} />
+                </div>
+                <div className="flex flex-wrap gap-3 mt-4">
+                  <div className={`${shimmer} h-7 w-20 rounded-full`} />
+                  <div className={`${shimmer} h-7 w-24 rounded-full`} />
+                  <div className={`${shimmer} h-7 w-32 rounded-full`} />
+                </div>
+              </div>
+
+              {/* Details card skeleton */}
+              <div className="bg-white border-2 border-black rounded-xl p-8 shadow-neo space-y-8">
+                {/* Overview */}
+                <div>
+                  <div className="flex items-center gap-2 mb-3">
+                    <div className="w-2 h-2 bg-gray-300 rounded-full" />
+                    <div className={`${shimmer} h-5 w-24`} />
+                  </div>
+                  <div className="space-y-2">
+                    <div className={`${shimmer} h-4 w-full`} />
+                    <div className={`${shimmer} h-4 w-full`} />
+                    <div className={`${shimmer} h-4 w-2/3`} />
+                  </div>
+                </div>
+                {/* Responsibilities */}
+                <div>
+                  <div className="flex items-center gap-2 mb-3">
+                    <div className="w-2 h-2 bg-gray-300 rounded-full" />
+                    <div className={`${shimmer} h-5 w-44`} />
+                  </div>
+                  <div className="space-y-2 pl-5">
+                    {[...Array(4)].map((_, i) => <div key={i} className={`${shimmer} h-4`} style={{ width: `${75 - i * 8}%` }} />)}
+                  </div>
+                </div>
+                {/* Requirements */}
+                <div>
+                  <div className="flex items-center gap-2 mb-3">
+                    <div className="w-2 h-2 bg-gray-300 rounded-full" />
+                    <div className={`${shimmer} h-5 w-36`} />
+                  </div>
+                  <div className="space-y-2 pl-5">
+                    {[...Array(3)].map((_, i) => <div key={i} className={`${shimmer} h-4`} style={{ width: `${80 - i * 12}%` }} />)}
+                  </div>
+                </div>
+                {/* Skills */}
+                <div>
+                  <div className="flex items-center gap-2 mb-3">
+                    <div className="w-2 h-2 bg-gray-300 rounded-full" />
+                    <div className={`${shimmer} h-5 w-16`} />
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    {[...Array(5)].map((_, i) => <div key={i} className={`${shimmer} h-8 rounded-md`} style={{ width: `${60 + i * 12}px` }} />)}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Sidebar skeleton */}
+            <div className="lg:col-span-1">
+              <div className="sticky top-24">
+                <div className="bg-white border-2 border-black rounded-xl p-6 shadow-neo">
+                  <div className={`${shimmer} h-6 w-28 mx-auto mb-6`} />
+                  <div className="grid grid-cols-2 gap-4 mb-6">
+                    <div className="flex flex-col items-center p-3 bg-gray-50 rounded-lg">
+                      <div className={`${shimmer} h-3 w-14 mb-2`} />
+                      <div className={`${shimmer} h-4 w-16`} />
+                    </div>
+                    <div className="flex flex-col items-center p-3 bg-gray-50 rounded-lg">
+                      <div className={`${shimmer} h-3 w-14 mb-2`} />
+                      <div className={`${shimmer} h-4 w-16`} />
+                    </div>
+                  </div>
+                  <div className={`${shimmer} h-10 w-full rounded-full`} />
+                  <div className="flex items-center justify-center gap-4 mt-6 pt-6 border-t border-gray-100">
+                    <div className={`${shimmer} h-5 w-5 rounded`} />
+                    <div className={`${shimmer} h-5 w-5 rounded`} />
+                    <span className="w-px h-5 bg-gray-200" />
+                    <div className={`${shimmer} h-5 w-16 rounded`} />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </PageTemplate>
+    );
+  }
 
   if (!job) {
     return (
@@ -66,31 +202,6 @@ export default function InternshipDetail() {
     }
   };
 
-  const handleFormSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    const form = e.target as HTMLFormElement;
-    const formData = new FormData(form);
-    
-    const submission = {
-      jobId: job.id,
-      jobTitle: job.title,
-      name: formData.get('name'),
-      email: formData.get('email'),
-      message: formData.get('message'),
-      portfolio: formData.get('portfolio'),
-      date: new Date().toISOString()
-    };
-
-    const existing = JSON.parse(localStorage.getItem('stepzen_applications') || '[]');
-    localStorage.setItem('stepzen_applications', JSON.stringify([...existing, submission]));
-    
-    setFormStatus('success');
-    form.reset();
-    setTimeout(() => {
-      setShowApplyForm(false);
-      setFormStatus('idle');
-    }, 3000);
-  };
 
   const REPORT_REASONS = [
     'Scam / Fraud',
@@ -100,25 +211,32 @@ export default function InternshipDetail() {
     'Other',
   ];
 
-  const handleReport = () => {
+  const handleReport = async () => {
     if (!reportReason) {
       showAlert('Please select a reason.', 'error');
       return;
     }
-    const report = {
-      jobId: job.id,
-      jobTitle: job.title,
-      company: job.company,
-      reason: reportReason,
-      details: reportDetails,
-      date: new Date().toISOString(),
-    };
-    const existing = JSON.parse(localStorage.getItem('stepzen_reports') || '[]');
-    localStorage.setItem('stepzen_reports', JSON.stringify([...existing, report]));
-    showAlert('Report submitted. Thank you!', 'success');
-    setShowReportModal(false);
-    setReportReason('');
-    setReportDetails('');
+    setReportLoading(true);
+    try {
+      const res = await fetch(`/api/jobs/${id}/report`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ reason: reportReason, message: reportDetails }),
+      });
+      if (!res.ok) {
+        const data = await res.json();
+        showAlert(data.error || 'Failed to submit report.', 'error');
+        return;
+      }
+      showAlert('Report submitted. Thank you!', 'success');
+      setShowReportModal(false);
+      setReportReason('');
+      setReportDetails('');
+    } catch {
+      showAlert('Something went wrong. Please try again.', 'error');
+    } finally {
+      setReportLoading(false);
+    }
   };
 
   return (
@@ -219,17 +337,10 @@ export default function InternshipDetail() {
                    </div>
 
                    <div className="space-y-3">
-                      <a href={job.telegramApplyLink} target="_blank" rel="noreferrer" className="block">
-                        <Button fullWidth size="lg">Apply via Telegram</Button>
+                      <a href={job.telegramApplyLink} target="_blank" rel="noreferrer" className="flex items-center justify-center gap-2 w-full bg-[#229ED9] text-white px-4 py-3 rounded-full font-bold text-sm border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:translate-y-[1px] hover:shadow-none transition-all">
+                        <Send size={18} />
+                        Apply via Telegram
                       </a>
-                      
-                      <Button 
-                        variant="outline" 
-                        fullWidth 
-                        onClick={() => setShowApplyForm(!showApplyForm)}
-                      >
-                        {showApplyForm ? 'Close Form' : 'Apply on Website'}
-                      </Button>
                    </div>
 
                     <div className="flex items-center justify-center gap-4 mt-6 pt-6 border-t border-gray-100">
@@ -246,40 +357,6 @@ export default function InternshipDetail() {
                        </button>
                     </div>
                 </div>
-
-                {/* Local Form */}
-                {showApplyForm && (
-                  <div className="bg-white border-2 border-black rounded-xl p-6 shadow-neo animate-in zoom-in-95 duration-300">
-                     {formStatus === 'success' ? (
-                       <div className="text-center py-8">
-                          <CheckCircle size={48} className="text-green-500 mx-auto mb-4" />
-                          <h4 className="font-bold text-xl">Application Sent!</h4>
-                          <p className="text-gray-600 mt-2">Good luck! We saved your details.</p>
-                       </div>
-                     ) : (
-                       <form onSubmit={handleFormSubmit} className="space-y-4">
-                          <h4 className="font-bold text-lg mb-4">Quick Application</h4>
-                          <div>
-                            <label className="block text-sm font-bold mb-1">Full Name</label>
-                            <input required name="name" type="text" className="w-full p-2 border-2 border-gray-200 rounded-lg focus:border-black focus:outline-none" />
-                          </div>
-                          <div>
-                            <label className="block text-sm font-bold mb-1">Email</label>
-                            <input required name="email" type="email" className="w-full p-2 border-2 border-gray-200 rounded-lg focus:border-black focus:outline-none" />
-                          </div>
-                          <div>
-                            <label className="block text-sm font-bold mb-1">Portfolio URL (Optional)</label>
-                            <input name="portfolio" type="url" className="w-full p-2 border-2 border-gray-200 rounded-lg focus:border-black focus:outline-none" />
-                          </div>
-                          <div>
-                            <label className="block text-sm font-bold mb-1">Short Message</label>
-                            <textarea required name="message" rows={3} className="w-full p-2 border-2 border-gray-200 rounded-lg focus:border-black focus:outline-none"></textarea>
-                          </div>
-                          <Button type="submit" fullWidth variant="secondary">Submit Application</Button>
-                       </form>
-                     )}
-                  </div>
-                )}
              </div>
           </div>
         </div>
@@ -330,9 +407,10 @@ export default function InternshipDetail() {
                 </Button>
                 <button
                   onClick={handleReport}
-                  className="w-full px-6 py-2.5 bg-red-500 text-white font-bold rounded-full border-2 border-black shadow-neo hover:-translate-y-1 hover:shadow-none transition-all duration-200"
+                  disabled={reportLoading}
+                  className="w-full px-6 py-2.5 bg-red-500 text-white font-bold rounded-full border-2 border-black shadow-neo hover:-translate-y-1 hover:shadow-none transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0 disabled:hover:shadow-neo"
                 >
-                  Submit Report
+                  {reportLoading ? 'Submitting…' : 'Submit Report'}
                 </button>
               </div>
             </div>

@@ -23,3 +23,112 @@ export interface FilterState {
   category: string;
   sort: 'newest' | 'deadline' | 'alpha';
 }
+
+// ─── Admin / Role types ───────────────────────────────────────────────────────
+
+export type UserRole = 'SEEKER' | 'EMPLOYER' | 'ADMIN';
+
+export type JobStatus =
+  | 'DRAFT'
+  | 'PENDING_REVIEW'
+  | 'PUBLISHED'
+  | 'REJECTED'
+  | 'ARCHIVED';
+
+export type ReportReason =
+  | 'SPAM'
+  | 'SCAM'
+  | 'INAPPROPRIATE'
+  | 'DUPLICATE'
+  | 'OTHER';
+
+export type ReportStatus = 'OPEN' | 'IN_REVIEW' | 'RESOLVED' | 'DISMISSED';
+
+export interface AdminUser {
+  id: string;
+  email: string;
+  name: string;
+  role: UserRole;
+  isBanned: boolean;
+  banReason?: string;
+  createdAt: string;
+}
+
+export interface Category {
+  id: string;
+  name: string;
+  slug: string;
+  isActive: boolean;
+  createdAt: string;
+}
+
+export interface AdminJob {
+  id: string;
+  title: string;
+  description: string;
+  companyName: string;
+  location?: string;
+  jobType?: string;
+  telegramLink: string;
+  postToTelegram: boolean;
+  telegramBannerUrl?: string;
+  responsibilities?: string[];
+  requirements?: string[];
+  skills?: string[];
+  duration?: string;
+  stipend?: string;
+  deadline?: string;
+  categoryId: string;
+  createdById: string;
+  status: JobStatus;
+  reviewedById?: string;
+  reviewNote?: string;
+  publishedAt?: string;
+  expiresAt?: string;
+  viewCount: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface SavedJob {
+  id: string;
+  userId: string;
+  jobId: string;
+  createdAt: string;
+}
+
+export interface JobReport {
+  id: string;
+  jobId: string;
+  reportedById?: string;
+  reason: ReportReason;
+  message?: string;
+  status: ReportStatus;
+  handledById?: string;
+  handledNote?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface AuditLog {
+  id: string;
+  actorId: string;
+  action: string;
+  targetType: 'Job' | 'User' | 'Category' | 'Report';
+  targetId: string;
+  metadata?: Record<string, unknown>;
+  createdAt: string;
+}
+
+/** Shape returned by the audit-logs API (includes resolved actor info) */
+export interface AuditLogEntry {
+  id: string;
+  actorId: string;
+  actorName: string;
+  actorEmail: string;
+  action: string;
+  targetType: string;
+  targetId: string;
+  metadata?: Record<string, unknown> | null;
+  createdAt: string;
+}

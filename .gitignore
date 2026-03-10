@@ -7,6 +7,7 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
+
 node_modules
 dist
 dist-ssr
@@ -31,3 +32,8 @@ build
 # Old React files (backup)
 *.old
 pages_old/
+
+/generated/prisma
+
+
+note.txt

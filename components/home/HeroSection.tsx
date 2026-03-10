@@ -11,7 +11,7 @@ export const HeroSection: React.FC = () => {
     <section className="px-6 md:px-4 pb-8 md:py-0 max-w-7xl mx-auto overflow-hidden">
       {/* Mobile layout */}
       <div className="md:hidden">
-        <div className="flex justify-start py-4">
+        <div className="flex justify-start py-4" style={{ minHeight: 256 }}>
           <Image src="/assets/images/hero_image.svg" alt="Hero Illustration" width={256} height={256} className="w-64 h-auto" />
         </div>
         <h1 className="text-5xl font-display font-bold leading-[0.9] text-gray-900 tracking-tighter mb-6">
@@ -71,8 +71,8 @@ export const HeroSection: React.FC = () => {
             </a>
           </div>
         </div>
-        <div className="w-1/2 relative flex justify-center">
-          <Image src="/assets/images/hero_image.svg" alt="Hero Illustration" width={500} height={500} className="w-full h-auto p-16" />
+        <div className="w-1/2 relative flex justify-center" style={{ minHeight: 400 }}>
+          <Image src="/assets/images/hero_image.svg" alt="Hero Illustration" width={400} height={500} className="w-full h-auto p-16" priority />
         </div>
       </div>
     </section>
