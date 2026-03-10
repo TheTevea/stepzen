@@ -1,14 +1,17 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { Mail, Lock, User, ArrowRight, Eye, EyeOff } from 'lucide-react';
+import { Mail, Lock, User, ArrowRight, Eye, EyeOff, Send, ExternalLink, Check, Loader2 } from 'lucide-react';
 import { useAlert } from '@/context/AlertContext';
 import { Button } from '@/components/Button';
 import { PageTemplate } from '@/components/PageTemplate';
 
 export const dynamic = 'force-dynamic';
+
+type VerifyChannel = 'email' | 'telegram';
+type TelegramLinkState = 'idle' | 'generating' | 'waiting' | 'linked' | 'error';
 
 export default function Signup() {
   const [name, setName] = useState('');
@@ -19,24 +22,139 @@ export default function Signup() {
   const { showAlert } = useAlert();
   const router = useRouter();
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!email || !name || !password) return;
+  // Telegram linking state
+  const [telegramState, setTelegramState] = useState<TelegramLinkState>('idle');
+  const [deepLink, setDeepLink] = useState('');
+  const [linkCode, setLinkCode] = useState('');
+  const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
+  // Clean up polling on unmount
+  useEffect(() => {
+    return () => {
+      if (pollingRef.current) clearInterval(pollingRef.current);
+    };
+  }, []);
+
+  const stopPolling = useCallback(() => {
+    if (pollingRef.current) {
+      clearInterval(pollingRef.current);
+      pollingRef.current = null;
+    }
+  }, []);
+
+  const handleTelegramLink = async () => {
+    if (!email || !name || !password) {
+      showAlert('Please fill in all fields first.', 'error');
+      return;
+    }
     if (password.length < 6) {
       showAlert('Password must be at least 6 characters.', 'error');
       return;
     }
-    
+
+    setTelegramState('generating');
+
+    try {
+      const res = await fetch('/api/auth/telegram-link', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email }),
+      });
+      const data = await res.json();
+
+      if (!res.ok) {
+        showAlert(data.error || 'Failed to generate Telegram link.', 'error');
+        setTelegramState('error');
+        return;
+      }
+
+      if (data.linked) {
+        // Already linked, skip to OTP
+        setTelegramState('linked');
+        await sendOtpViaTelegram();
+        return;
+      }
+
+      setDeepLink(data.deepLink);
+      setLinkCode(data.linkCode);
+      setTelegramState('waiting');
+
+      // Start polling for link status
+      stopPolling();
+      pollingRef.current = setInterval(async () => {
+        try {
+          const statusRes = await fetch(
+            `/api/auth/telegram-link/status?linkCode=${data.linkCode}`
+          );
+          const statusData = await statusRes.json();
+
+          if (statusData.linked) {
+            stopPolling();
+            setTelegramState('linked');
+            // Auto-send OTP
+            await sendOtpViaTelegram();
+          } else if (statusData.expired) {
+            stopPolling();
+            setTelegramState('error');
+            showAlert('Link expired. Please try again.', 'error');
+          }
+        } catch {
+          // Silently continue polling
+        }
+      }, 2000);
+    } catch {
+      showAlert('Something went wrong. Please try again.', 'error');
+      setTelegramState('error');
+    }
+  };
+
+  const sendOtpViaTelegram = async () => {
+    sessionStorage.setItem(
+      'stepzen_pending_signup',
+      JSON.stringify({ name, password })
+    );
+
+    try {
+      const res = await fetch('/api/auth/send-otp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, name, channel: 'telegram' }),
+      });
+      const data = await res.json();
+
+      if (!res.ok) {
+        showAlert(data.error || 'Failed to send code.', 'error');
+        return;
+      }
+
+      if (data.sentVia === 'telegram') {
+        showAlert('Verification code sent to your Telegram! 📱', 'success');
+      } else {
+        showAlert('Telegram not linked — code sent to email instead. 📧', 'info');
+      }
+      router.push(`/verify-email?email=${encodeURIComponent(email)}`);
+    } catch {
+      showAlert('Failed to send verification code.', 'error');
+    }
+  };
+
+  const handleEmailVerify = async () => {
+    if (!email || !name || !password) {
+      showAlert('Please fill in all fields first.', 'error');
+      return;
+    }
+    if (password.length < 6) {
+      showAlert('Password must be at least 6 characters.', 'error');
+      return;
+    }
+
     setIsSubmitting(true);
     try {
-      // Store signup data temporarily for the verify step
       sessionStorage.setItem(
         'stepzen_pending_signup',
         JSON.stringify({ name, password })
       );
 
-      // Send OTP to email
       const res = await fetch('/api/auth/send-otp', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -56,6 +174,11 @@ export default function Signup() {
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    // Prevent default form submission — buttons handle actions
   };
 
   return (
@@ -128,25 +251,94 @@ export default function Signup() {
               <p className="text-xs text-gray-400 mt-1.5">Must be at least 6 characters</p>
             </div>
 
-            {/* Submit */}
-            <Button 
-              type="submit" 
-              fullWidth 
-              size="lg" 
-              disabled={isSubmitting}
-              className="group"
-            >
-              {isSubmitting ? (
-                <span className="flex items-center gap-2">
-                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                  Sending Code...
-                </span>
-              ) : (
-                <span className="flex items-center gap-2">
-                  Continue <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
-                </span>
-              )}
-            </Button>
+            {/* Telegram Linking Section */}
+            {telegramState === 'waiting' && (
+              <div className="rounded-xl border-2 border-blue-200 bg-blue-50/50 p-4 space-y-3 animate-in fade-in duration-300">
+                <div className="flex items-center gap-2 text-sm font-bold text-blue-700">
+                  <Loader2 size={16} className="animate-spin" />
+                  Waiting for Telegram link...
+                </div>
+                <p className="text-xs text-blue-600">
+                  Click the button below to open Telegram and link your account:
+                </p>
+                <a
+                  href={deepLink}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center justify-center gap-2 w-full py-2.5 px-4 rounded-lg bg-[#0088cc] text-white text-sm font-bold hover:bg-[#0077b5] transition-colors"
+                >
+                  <Send size={16} />
+                  Open @StepZenBot
+                  <ExternalLink size={14} />
+                </a>
+                <p className="text-xs text-center text-gray-400">
+                  Send <code className="bg-white px-1.5 py-0.5 rounded text-blue-600 font-mono text-xs">/start {linkCode}</code> in the bot
+                </p>
+              </div>
+            )}
+
+            {telegramState === 'linked' && (
+              <div className="rounded-xl border-2 border-green-200 bg-green-50/50 p-4 animate-in fade-in duration-300">
+                <div className="flex items-center gap-2 text-sm font-bold text-green-700">
+                  <Check size={16} />
+                  Telegram linked! Sending verification code...
+                </div>
+              </div>
+            )}
+
+            {/* Action Buttons */}
+            <div className="space-y-3">
+              {/* Verify via Telegram */}
+              <button
+                type="button"
+                onClick={handleTelegramLink}
+                disabled={isSubmitting || telegramState === 'generating' || telegramState === 'waiting' || telegramState === 'linked'}
+                className="flex items-center justify-center gap-2 w-full py-3 px-4 rounded-xl bg-[#0088cc] text-white text-sm font-bold hover:bg-[#0077b5] transition-all disabled:opacity-50 disabled:cursor-not-allowed group"
+              >
+                {telegramState === 'generating' ? (
+                  <>
+                    <Loader2 size={18} className="animate-spin" />
+                    Generating link...
+                  </>
+                ) : telegramState === 'waiting' ? (
+                  <>
+                    <Loader2 size={18} className="animate-spin" />
+                    Waiting for link...
+                  </>
+                ) : (
+                  <>
+                    <Send size={18} />
+                    Verify via Telegram
+                    <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
+                  </>
+                )}
+              </button>
+
+              {/* Divider */}
+              <div className="auth-divider">or</div>
+
+              {/* Verify via Email */}
+              <Button 
+                type="button"
+                onClick={handleEmailVerify}
+                fullWidth 
+                size="lg" 
+                disabled={isSubmitting || telegramState === 'linked'}
+                className="group"
+              >
+                {isSubmitting ? (
+                  <span className="flex items-center gap-2">
+                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    Sending Code...
+                  </span>
+                ) : (
+                  <span className="flex items-center gap-2">
+                    <Mail size={18} />
+                    Verify via Email <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
+                  </span>
+                )}
+              </Button>
+            </div>
 
             {/* Divider */}
             <div className="auth-divider">or</div>

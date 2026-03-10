@@ -175,6 +175,18 @@ model EmailOtp {
   @@index([email])
 }
 
+model TelegramLink {
+  id        String   @id @default(cuid())
+  linkCode  String   @unique
+  chatId    String?
+  email     String?
+  createdAt DateTime @default(now())
+  expiresAt DateTime
+
+  @@index([linkCode])
+  @@index([email])
+}
+
 model ContactMessage {
   id           String    @id @default(cuid())
   name         String

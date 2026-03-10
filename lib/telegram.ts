@@ -178,3 +178,61 @@ async function sendTextMessage(text: string): Promise<void> {
     console.error('[Telegram] sendMessage failed:', err);
   }
 }
+
+// ─── Telegram Bot OTP Functions ──────────────────────────────────────
+
+/**
+ * Send an OTP code to a user via Telegram bot DM.
+ */
+export async function sendTelegramOtp(chatId: string, code: string): Promise<void> {
+  if (!BOT_TOKEN) {
+    throw new Error('TELEGRAM_BOT_TOKEN not configured');
+  }
+
+  const message = [
+    '🔐 <b>StepZen Verification Code</b>',
+    '',
+    `Your code is:`,
+    '',
+    `<code>${code}</code>`,
+    '',
+    '⏱ This code expires in <b>5 minutes</b>.',
+    '',
+    '━━━━━━━━━━━━━━━━━━━',
+    'If you didn\'t request this, please ignore this message.',
+  ].join('\n');
+
+  const res = await fetch(`${TELEGRAM_API}/sendMessage`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      chat_id: chatId,
+      text: message,
+      parse_mode: 'HTML',
+    }),
+  });
+
+  if (!res.ok) {
+    const err = await res.json();
+    console.error('[Telegram] sendOtp failed:', err);
+    throw new Error('Failed to send OTP via Telegram');
+  }
+}
+
+/**
+ * Send a reply message to a Telegram user (used during linking flow).
+ */
+export async function sendTelegramReply(chatId: string, text: string): Promise<void> {
+  if (!BOT_TOKEN) return;
+
+  await fetch(`${TELEGRAM_API}/sendMessage`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      chat_id: chatId,
+      text,
+      parse_mode: 'HTML',
+    }),
+  });
+}
+
